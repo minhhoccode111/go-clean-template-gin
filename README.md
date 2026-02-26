@@ -12,14 +12,14 @@ Clean Architecture template for Golang services
 [![Go Report Card](https://goreportcard.com/badge/github.com/evrone/go-clean-template)](https://goreportcard.com/report/github.com/evrone/go-clean-template)
 [![codecov](https://codecov.io/gh/evrone/go-clean-template/branch/master/graph/badge.svg?token=XE3E0X3EVQ)](https://codecov.io/gh/evrone/go-clean-template)
 
-[![Web Framework](https://img.shields.io/badge/Fiber-Web%20Framework-blue)](https://github.com/gofiber/fiber)
+[![Web Framework](https://img.shields.io/badge/Gin-Web%20Framework-blue)](https://github.com/gin-gonic/gin)
 [![API Documentation](https://img.shields.io/badge/Swagger-API%20Documentation-blue)](https://github.com/swaggo/swag)
 [![Validation](https://img.shields.io/badge/Validator-Data%20Integrity-blue)](https://github.com/go-playground/validator)
 [![JSON Handling](https://img.shields.io/badge/Go--JSON-Fast%20Serialization-blue)](https://github.com/goccy/go-json)
 [![Query Builder](https://img.shields.io/badge/Squirrel-SQL%20Query%20Builder-blue)](https://github.com/Masterminds/squirrel)
 [![Database Migrations](https://img.shields.io/badge/Migrations-Seamless%20Schema%20Updates-blue)](https://github.com/golang-migrate/migrate)
 [![Logging](https://img.shields.io/badge/ZeroLog-Structured%20Logging-blue)](https://github.com/rs/zerolog)
-[![Metrics](https://img.shields.io/badge/Prometheus-Metrics%20Integration-blue)](https://github.com/ansrivas/fiberprometheus)
+[![Metrics](https://img.shields.io/badge/Prometheus-Metrics%20Integration-blue)](https://github.com/zsais/go-gin-prometheus)
 [![Testing](https://img.shields.io/badge/Testify-Testing%20Framework-blue)](https://github.com/stretchr/testify)
 [![Mocking](https://img.shields.io/badge/Mock-Mocking%20Library-blue)](https://go.uber.org/mock)
 
@@ -43,7 +43,7 @@ This template implements three types of servers:
 - MQ RPC (based on NATS as [transport](https://github.com/nats-io/nats.go)
   and [Request-Reply pattern](https://www.enterpriseintegrationpatterns.com/patterns/messaging/RequestReply.html))
 - gRPC ([gRPC](https://grpc.io/) framework based on protobuf)
-- REST API ([Fiber](https://github.com/gofiber/fiber) framework)
+- REST API ([Gin](https://github.com/gin-gonic/gin) framework)
 
 ## Content
 
@@ -165,7 +165,7 @@ Server handler layer (MVC controllers). The template shows 3 servers:
 
 - AMQP RPC (based on RabbitMQ as transport)
 - gRPC ([gRPC](https://grpc.io/) framework based on protobuf)
-- REST API ([Fiber](https://github.com/gofiber/fiber) framework)
+- REST API ([Gin](https://github.com/gin-gonic/gin) framework)
 
 Server routers are written in the same style:
 
@@ -245,7 +245,7 @@ apiV2Group := app.Group("/v2")
 }
 ```
 
-Instead of [Fiber](https://github.com/gofiber/fiber), you can use any other http framework.
+Instead of [Gin](https://github.com/gin-gonic/gin), you can use any other http framework.
 
 In `router.go` and above the handler methods, there are comments for generating swagger documentation
 using [swag](https://github.com/swaggo/swag).

@@ -61,8 +61,8 @@ func Run(cfg *config.Config) { //nolint: gocyclo,cyclop,funlen,gocritic,nolintli
 	grpc.NewRouter(grpcServer.App, translationUseCase, l)
 
 	// HTTP Server
-	httpServer := httpserver.New(l, httpserver.Port(cfg.HTTP.Port), httpserver.Prefork(cfg.HTTP.UsePreforkMode))
-	restapi.NewRouter(httpServer.App, cfg, translationUseCase, l)
+	httpServer := httpserver.New(l, httpserver.Port(cfg.HTTP.Port))
+	restapi.NewRouter(httpServer.Engine, cfg, translationUseCase, l)
 
 	// Start servers
 	rmqServer.Start()

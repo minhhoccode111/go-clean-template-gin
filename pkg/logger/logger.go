@@ -52,7 +52,7 @@ func New(level string) *Logger {
 		Logger()
 
 	return &Logger{
-		logger: new(logger),
+		logger: &logger,
 	}
 }
 

@@ -21,7 +21,7 @@ func newBufferedLogger(level string) (*Logger, *bytes.Buffer) {
 	// Recreate the zerolog.Logger to write into buffer while keeping similar options
 	// We keep the same skip frame count so caller field exists, but we don't assert its value
 	zl := zerolog.New(buf).With().Timestamp().Logger()
-	l.logger = new(zl)
+	l.logger = &zl
 
 	return l, buf
 }
@@ -65,7 +65,8 @@ func TestInfoAndWarn_LogMessageWithAndWithoutArgs(t *testing.T) {
 	out := buf.String()
 
 	// Expect level fields and messages present
-	if !strings.Contains(out, "\"level\":\"info\"") || !strings.Contains(out, "\"message\":\"hello\"") {
+	if !strings.Contains(out, "\"level\":\"info\"") ||
+		!strings.Contains(out, "\"message\":\"hello\"") {
 		t.Fatalf("info without args not found in output: %s", out)
 	}
 
@@ -87,7 +88,8 @@ func TestDebug_RespectsLevel(t *testing.T) {
 
 	if got := buf.String(); got != "" {
 		// zerolog may still emit entries depending on global level, ensure global level is info
-		if zerolog.GlobalLevel() == zerolog.InfoLevel && strings.Contains(got, "\"level\":\"debug\"") {
+		if zerolog.GlobalLevel() == zerolog.InfoLevel &&
+			strings.Contains(got, "\"level\":\"debug\"") {
 			t.Fatalf("debug should be suppressed at info level, got: %s", got)
 		}
 	}
@@ -179,7 +181,12 @@ func TestFatal_ExitsAndLogs(t *testing.T) {
 		return
 	}
 
-	cmd := exec.CommandContext(t.Context(), os.Args[0], "-test.run", t.Name()) //nolint:gosec // it's ok to exec self in tests
+	cmd := exec.CommandContext(
+		t.Context(),
+		os.Args[0],
+		"-test.run",
+		t.Name(),
+	) //nolint:gosec // it's ok to exec self in tests
 
 	cmd.Env = append(os.Environ(), "LOGGER_FATAL_SUBPROC=1")
 

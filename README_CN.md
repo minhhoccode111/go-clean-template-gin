@@ -9,14 +9,14 @@ golang服务的整洁架构模板
 [![Go Report Card](https://goreportcard.com/badge/github.com/evrone/go-clean-template)](https://goreportcard.com/report/github.com/evrone/go-clean-template)
 [![codecov](https://codecov.io/gh/evrone/go-clean-template/branch/master/graph/badge.svg?token=XE3E0X3EVQ)](https://codecov.io/gh/evrone/go-clean-template)
 
-[![Web Framework](https://img.shields.io/badge/Fiber-Web%20Framework-blue)](https://github.com/gofiber/fiber)
+[![Web Framework](https://img.shields.io/badge/Gin-Web%20Framework-blue)](https://github.com/gin-gonic/gin)
 [![API Documentation](https://img.shields.io/badge/Swagger-API%20Documentation-blue)](https://github.com/swaggo/swag)
 [![Validation](https://img.shields.io/badge/Validator-Data%20Integrity-blue)](https://github.com/go-playground/validator)
 [![JSON Handling](https://img.shields.io/badge/Go--JSON-Fast%20Serialization-blue)](https://github.com/goccy/go-json)
 [![Query Builder](https://img.shields.io/badge/Squirrel-SQL%20Query%20Builder-blue)](https://github.com/Masterminds/squirrel)
 [![Database Migrations](https://img.shields.io/badge/Migrations-Seamless%20Schema%20Updates-blue)](https://github.com/golang-migrate/migrate)
 [![Logging](https://img.shields.io/badge/ZeroLog-Structured%20Logging-blue)](https://github.com/rs/zerolog)
-[![Metrics](https://img.shields.io/badge/Prometheus-Metrics%20Integration-blue)](https://github.com/ansrivas/fiberprometheus)
+[![Metrics](https://img.shields.io/badge/Prometheus-Metrics%20Integration-blue)](https://github.com/zsais/go-gin-prometheus)
 [![Testing](https://img.shields.io/badge/Testify-Testing%20Framework-blue)](https://github.com/stretchr/testify)
 [![Mocking](https://img.shields.io/badge/Mock-Mocking%20Library-blue)](https://go.uber.org/mock)
 
@@ -38,7 +38,7 @@ golang服务的整洁架构模板
 - AMQP RPC（基于 RabbitMQ 作为传输）
 - NATS RPC（基于 NATS 作为传输）
 - gRPC（基于 protobuf 的 [gRPC](https://grpc.io/) 框架）
-- REST API（基于 [Fiber](https://github.com/gofiber/fiber) 框架）
+- REST API（基于 [Gin](https://github.com/gin-gonic/gin) 框架）
 
 ## 内容
 
@@ -156,7 +156,7 @@ go run -tags migrate ./cmd/app
 
 - AMQP RPC（基于 RabbitMQ 作为传输）
 - gRPC（基于 protobuf 的 [gRPC](https://grpc.io/) 框架）
-- REST API（基于 [Fiber](https://github.com/gofiber/fiber) 框架）
+- REST API（基于 [Gin](https://github.com/gin-gonic/gin) 框架）
 
 服务器路由器以相同的风格编写：
 
@@ -236,7 +236,7 @@ apiV2Group := app.Group("/v2")
 }
 ```
 
-除了 [Fiber](https://github.com/gofiber/fiber)，您可以使用任何其他 http 框架。
+除了 [Gin](https://github.com/gin-gonic/gin)，您可以使用任何其他 http 框架。
 在 `router.go` 及以上的处理程序方法中，可以使用[swag](https://github.com/swaggo/swag) swagger 通过注释生成swagger文档.
 
 ### `internal/entity`
