@@ -7,8 +7,14 @@ import (
 	"time"
 )
 
-// Interface defines the operations a cache must support.
-type Interface interface {
+const (
+	_defaultTTL             = 10 * time.Minute
+	_defaultCleanupInterval = 5 * time.Minute
+	_defaultMaxItems        = 1000
+)
+
+// ICache defines the operations a cache must support.
+type ICache interface {
 	// Set adds a value to the cache with the default TTL.
 	Set(ctx context.Context, key string, value any)
 
@@ -38,60 +44,43 @@ type item struct {
 	size       int // Approximate size in bytes
 }
 
-// Config contains options for configuring a cache.
-type Config struct {
-	// DefaultTTL is the default time-to-live for cache entries.
-	DefaultTTL time.Duration
-
-	// CleanupInterval is how often the cache runs cleanup.
-	CleanupInterval time.Duration
-
-	// MaxItems is the maximum number of items allowed in the cache.
-	MaxItems int
-
-	// OnEviction is called when an item is evicted from the cache.
-	OnEviction func(key string, value any)
-}
-
-// DefaultConfig returns a default configuration for the cache.
-func DefaultConfig() Config {
-	return Config{
-		DefaultTTL:      10 * time.Minute,
-		CleanupInterval: 5 * time.Minute,
-		MaxItems:        1000,
-		OnEviction:      nil,
-	}
-}
-
 // Cache is a thread-safe in-memory cache with TTL and memory management.
 type Cache struct {
-	itemCount  atomic.Int64 // Use atomic operations to track item count
-	data       sync.Map
-	config     Config
+	itemCount atomic.Int64 // Use atomic operations to track item count
+	data      sync.Map
+
+	defaultTTL      time.Duration
+	cleanupInterval time.Duration
+	maxItems        int
+	onEviction      func(key string, value any)
+
 	stopChan   chan struct{}
 	closedChan chan struct{}
 }
 
 // New creates a new memory cache with the given configuration.
-func New(config Config) *Cache {
+func New(opts ...Option) *Cache {
 	c := &Cache{
-		config:     config,
+		defaultTTL:      _defaultTTL,
+		cleanupInterval: _defaultCleanupInterval,
+		maxItems:        _defaultMaxItems,
+
 		stopChan:   make(chan struct{}),
 		closedChan: make(chan struct{}),
+	}
+
+	// Custom options
+	for _, opt := range opts {
+		opt(c)
 	}
 
 	go c.cleanupLoop()
 	return c
 }
 
-// NewDefault creates a new memory cache with default configuration.
-func NewDefault() *Cache {
-	return New(DefaultConfig())
-}
-
 // Set adds a value to the cache with the default TTL.
 func (c *Cache) Set(ctx context.Context, key string, value any) {
-	c.SetWithTTL(ctx, key, value, c.config.DefaultTTL)
+	c.SetWithTTL(ctx, key, value, c.defaultTTL)
 }
 
 // SetWithTTL adds a value to the cache with a custom TTL.
@@ -114,7 +103,7 @@ func (c *Cache) SetWithTTL(_ context.Context, key string, value any, ttl time.Du
 	})
 
 	// If we're over the max items, clean up old items.
-	if c.config.MaxItems > 0 && (&c.itemCount).Load() > int64(c.config.MaxItems) {
+	if c.maxItems > 0 && (&c.itemCount).Load() > int64(c.maxItems) {
 		c.cleanupOldest()
 	}
 }
@@ -136,8 +125,8 @@ func (c *Cache) Get(_ context.Context, key string) (any, bool) {
 		c.data.Delete(key)
 		(&c.itemCount).Add(-1)
 
-		if c.config.OnEviction != nil {
-			c.config.OnEviction(key, itm.value)
+		if c.onEviction != nil {
+			c.onEviction(key, itm.value)
 		}
 
 		return nil, false
@@ -151,9 +140,9 @@ func (c *Cache) Delete(_ context.Context, key string) {
 	if value, loaded := c.data.LoadAndDelete(key); loaded {
 		(&c.itemCount).Add(-1)
 
-		if c.config.OnEviction != nil {
+		if c.onEviction != nil {
 			if itm, ok := value.(item); ok {
-				c.config.OnEviction(key, itm.value)
+				c.onEviction(key, itm.value)
 			}
 		}
 	}
@@ -161,14 +150,14 @@ func (c *Cache) Delete(_ context.Context, key string) {
 
 // Clear removes all values from the cache.
 func (c *Cache) Clear(_ context.Context) {
-	if c.config.OnEviction != nil {
+	if c.onEviction != nil {
 		c.data.Range(func(key, value any) bool {
 			itm, ok := value.(item)
 			if !ok {
 				return true
 			}
 			if keyStr, ok := key.(string); ok {
-				c.config.OnEviction(keyStr, itm.value)
+				c.onEviction(keyStr, itm.value)
 			}
 			return true
 		})
@@ -198,7 +187,7 @@ func (c *Cache) Close() error {
 
 // cleanupLoop periodically cleans up expired items.
 func (c *Cache) cleanupLoop() {
-	ticker := time.NewTicker(c.config.CleanupInterval)
+	ticker := time.NewTicker(c.cleanupInterval)
 	defer func() {
 		ticker.Stop()
 		close(c.closedChan)
@@ -228,7 +217,7 @@ func (c *Cache) cleanup() {
 			c.data.Delete(key)
 			count++
 
-			if c.config.OnEviction != nil {
+			if c.onEviction != nil {
 				if keyStr, ok := key.(string); ok {
 					evicted[keyStr] = itm.value
 				}
@@ -241,9 +230,9 @@ func (c *Cache) cleanup() {
 		(&c.itemCount).Add(-int64(count))
 
 		// Call eviction callbacks outside the loop to avoid blocking the range
-		if c.config.OnEviction != nil {
+		if c.onEviction != nil {
 			for k, v := range evicted {
-				c.config.OnEviction(k, v)
+				c.onEviction(k, v)
 			}
 		}
 	}
@@ -252,12 +241,12 @@ func (c *Cache) cleanup() {
 // cleanupOldest removes the oldest items if we're over the max items.
 func (c *Cache) cleanupOldest() {
 	// Remove 20% of max items at once
-	threshold := max(c.config.MaxItems/5, 1)
+	threshold := max(c.maxItems/5, 1)
 
 	currentCount := (&c.itemCount).Load()
 
 	// If we're not over the threshold, don't do anything
-	if currentCount <= int64(c.config.MaxItems) {
+	if currentCount <= int64(c.maxItems) {
 		return
 	}
 
@@ -301,8 +290,8 @@ func (c *Cache) cleanupOldest() {
 		c.data.Delete(candidate.key)
 		deletedCount++
 
-		if c.config.OnEviction != nil {
-			c.config.OnEviction(candidate.key, candidate.value)
+		if c.onEviction != nil {
+			c.onEviction(candidate.key, candidate.value)
 		}
 	}
 

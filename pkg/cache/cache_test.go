@@ -10,10 +10,10 @@ import (
 
 func TestCacheBasicOperations(t *testing.T) {
 	ctx := context.Background()
-	config := DefaultConfig()
-	config.DefaultTTL = 100 * time.Millisecond
-	config.CleanupInterval = 50 * time.Millisecond
-	cache := New(config)
+	cache := New(
+		DefaultTTL(100*time.Millisecond),
+		CleanupInterval(50*time.Millisecond),
+	)
 	defer cache.Close()
 
 	// Test Set and Get
@@ -60,9 +60,8 @@ func TestCacheBasicOperations(t *testing.T) {
 
 func TestCacheEviction(t *testing.T) {
 	ctx := context.Background()
-	config := DefaultConfig()
-	config.MaxItems = 5
-	cache := New(config)
+	maxItems := 5
+	cache := New(MaxItems(maxItems))
 	defer cache.Close()
 
 	// Add 5 items (max capacity)
@@ -84,8 +83,8 @@ func TestCacheEviction(t *testing.T) {
 	cache.Set(ctx, "keyB", "valueB")
 
 	// Verify size is still within limits
-	if cache.Size() > int64(config.MaxItems) {
-		t.Errorf("Cache size %d exceeds limit %d", cache.Size(), config.MaxItems)
+	if cache.Size() > int64(maxItems) {
+		t.Errorf("Cache size %d exceeds limit %d", cache.Size(), maxItems)
 	}
 
 	// Some of the original keys should have been evicted
@@ -112,7 +111,7 @@ func TestCacheEviction(t *testing.T) {
 
 func TestCacheConcurrency(t *testing.T) {
 	ctx := context.Background()
-	cache := NewDefault()
+	cache := New()
 	defer cache.Close()
 
 	const goroutines = 10
@@ -170,16 +169,15 @@ func TestEvictionCallback(t *testing.T) {
 	evicted := make(map[string]interface{})
 	evictedMu := sync.Mutex{}
 
-	config := DefaultConfig()
-	config.DefaultTTL = 50 * time.Millisecond
-	config.CleanupInterval = 25 * time.Millisecond
-	config.OnEviction = func(key string, value interface{}) {
-		evictedMu.Lock()
-		evicted[key] = value
-		evictedMu.Unlock()
-	}
-
-	cache := New(config)
+	cache := New(
+		DefaultTTL(50*time.Millisecond),
+		CleanupInterval(25*time.Millisecond),
+		OnEviction(func(key string, value interface{}) {
+			evictedMu.Lock()
+			evicted[key] = value
+			evictedMu.Unlock()
+		}),
+	)
 	defer cache.Close()
 
 	// Add items
