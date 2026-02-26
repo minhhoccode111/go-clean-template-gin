@@ -2,6 +2,7 @@ package cache
 
 import (
 	"context"
+	"sort"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -88,14 +89,16 @@ func (c *Cache) SetWithTTL(_ context.Context, key string, value any, ttl time.Du
 	// Estimate size of the item (very rough approximation).
 	size := estimateSize(value)
 
-	// Check if item already exists to avoid double counting.
-	if _, exists := c.data.Load(key); exists {
-		c.data.Delete(key)
-	} else {
-		// Only increment if this is a new key.
-		(&c.itemCount).Add(1)
-	}
+	// Check if the key already exists.
+	// If it doesn't exist, we temporarily store a zero value to atomically
+	// mark its presence and get a chance to increment itemCount.
+	// LoadOrStore returns the actual value stored and a boolean indicating if the key was already present.
+	_, loaded := c.data.LoadOrStore(key, item{}) // Placeholder item to mark key presence
 
+	if !loaded { // Key was NOT present, so it's a new entry
+		c.itemCount.Add(1)
+	}
+	// Now, store the actual item, overwriting the placeholder or existing item
 	c.data.Store(key, item{
 		value:      value,
 		expiration: time.Now().Add(ttl),
@@ -103,7 +106,7 @@ func (c *Cache) SetWithTTL(_ context.Context, key string, value any, ttl time.Du
 	})
 
 	// If we're over the max items, clean up old items.
-	if c.maxItems > 0 && (&c.itemCount).Load() > int64(c.maxItems) {
+	if c.maxItems > 0 && c.itemCount.Load() > int64(c.maxItems) {
 		c.cleanupOldest()
 	}
 }
@@ -119,11 +122,12 @@ func (c *Cache) Get(_ context.Context, key string) (any, bool) {
 	if !ok {
 		// If the value is not of type item, it means it was corrupted or not set correctly.
 		c.data.Delete(key)
+		c.itemCount.Add(-1) // Decrement count for corrupted item
 		return nil, false
 	}
 	if time.Now().After(itm.expiration) {
 		c.data.Delete(key)
-		(&c.itemCount).Add(-1)
+		c.itemCount.Add(-1)
 
 		if c.onEviction != nil {
 			c.onEviction(key, itm.value)
@@ -138,7 +142,7 @@ func (c *Cache) Get(_ context.Context, key string) (any, bool) {
 // Delete removes a value from the cache.
 func (c *Cache) Delete(_ context.Context, key string) {
 	if value, loaded := c.data.LoadAndDelete(key); loaded {
-		(&c.itemCount).Add(-1)
+		c.itemCount.Add(-1)
 
 		if c.onEviction != nil {
 			if itm, ok := value.(item); ok {
@@ -150,6 +154,8 @@ func (c *Cache) Delete(_ context.Context, key string) {
 
 // Clear removes all values from the cache.
 func (c *Cache) Clear(_ context.Context) {
+	evicted := make(map[string]any) // Collect evicted items
+
 	if c.onEviction != nil {
 		c.data.Range(func(key, value any) bool {
 			itm, ok := value.(item)
@@ -157,19 +163,26 @@ func (c *Cache) Clear(_ context.Context) {
 				return true
 			}
 			if keyStr, ok := key.(string); ok {
-				c.onEviction(keyStr, itm.value)
+				evicted[keyStr] = itm.value
 			}
 			return true
 		})
 	}
 
 	c.data = sync.Map{}
-	(&c.itemCount).Store(0)
+	c.itemCount.Store(0)
+
+	// Call eviction callbacks outside the loop
+	if c.onEviction != nil {
+		for k, v := range evicted {
+			c.onEviction(k, v)
+		}
+	}
 }
 
 // Size returns the number of items in the cache.
 func (c *Cache) Size() int64 {
-	return (&c.itemCount).Load()
+	return c.itemCount.Load()
 }
 
 // Close stops the cache cleanup goroutine.
@@ -227,7 +240,7 @@ func (c *Cache) cleanup() {
 	})
 
 	if count > 0 {
-		(&c.itemCount).Add(-int64(count))
+		c.itemCount.Add(-int64(count))
 
 		// Call eviction callbacks outside the loop to avoid blocking the range
 		if c.onEviction != nil {
@@ -240,64 +253,70 @@ func (c *Cache) cleanup() {
 
 // cleanupOldest removes the oldest items if we're over the max items.
 func (c *Cache) cleanupOldest() {
-	// Remove 20% of max items at once
-	threshold := max(c.maxItems/5, 1)
+	currentCount := c.itemCount.Load()
 
-	currentCount := (&c.itemCount).Load()
-
-	// If we're not over the threshold, don't do anything
+	// If we're not over the max items, don't do anything
 	if currentCount <= int64(c.maxItems) {
 		return
 	}
 
-	// Find the oldest items
+	// Remove 20% of max items at once, but at least 1
+	threshold := max(c.maxItems/5, 1)
+
+	// Collect all items into a temporary slice
 	type keyExpPair struct {
 		key        string
 		value      any
 		expiration time.Time
 	}
-	candidates := make([]keyExpPair, 0, threshold)
+	allCandidates := make([]keyExpPair, 0, currentCount)
 
 	c.data.Range(func(key, value any) bool {
 		itm, ok := value.(item)
 		if !ok {
-			return true
+			return true // Skip corrupted items, they'll be cleaned by Get or cleanup()
 		}
-		if keyStr, ok := key.(string); ok && len(candidates) < threshold {
-			candidates = append(candidates, keyExpPair{keyStr, itm.value, itm.expiration})
-			return true
+		if keyStr, ok := key.(string); ok {
+			allCandidates = append(allCandidates, keyExpPair{keyStr, itm.value, itm.expiration})
 		}
-
-		// Find the newest item in candidates
-		newestIdx := 0
-		for i := 1; i < len(candidates); i++ {
-			if candidates[i].expiration.After(candidates[newestIdx].expiration) {
-				newestIdx = i
-			}
-		}
-
-		// Replace it if this item is older
-		if itm.expiration.Before(candidates[newestIdx].expiration) {
-			candidates[newestIdx] = keyExpPair{key.(string), itm.value, itm.expiration}
-		}
-
 		return true
 	})
 
-	// Delete the oldest items
-	deletedCount := 0
-	for _, candidate := range candidates {
-		c.data.Delete(candidate.key)
-		deletedCount++
+	// Sort candidates by expiration time (oldest first)
+	sort.Slice(allCandidates, func(i, j int) bool {
+		return allCandidates[i].expiration.Before(allCandidates[j].expiration)
+	})
 
-		if c.onEviction != nil {
-			c.onEviction(candidate.key, candidate.value)
+	// Determine how many to delete, up to threshold
+	toDeleteCount := min(threshold, len(allCandidates))
+	if toDeleteCount == 0 {
+		return // Nothing to delete
+	}
+
+	deletedCount := 0
+	evicted := make(map[string]any)
+
+	// Delete the oldest items
+	for i := 0; i < toDeleteCount; i++ {
+		candidate := allCandidates[i]
+		if _, loaded := c.data.LoadAndDelete(candidate.key); loaded {
+			deletedCount++
+			if c.onEviction != nil {
+				evicted[candidate.key] = candidate.value
+			}
 		}
 	}
 
 	// Update count
 	if deletedCount > 0 {
-		(&c.itemCount).Add(-int64(deletedCount))
+		c.itemCount.Add(-int64(deletedCount))
+	}
+
+	// Call eviction callbacks outside the loop
+	if c.onEviction != nil {
+		for k, v := range evicted {
+			c.onEviction(k, v)
+		}
 	}
 }
 
