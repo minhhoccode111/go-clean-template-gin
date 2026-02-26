@@ -1,0 +1,15 @@
+version: "2"
+sql:
+  - schema: "migrations"
+    queries: "internal/repo/persistent/query.sql"
+    engine: "postgresql"
+    gen:
+      go:
+        package: "sqlc"
+        out: "internal/repo/persistent/sqlc"
+        sql_package: "pgx/v5"
+        overrides:
+          - db_type: "varchar"
+            go_type: "string"
+          - db_type: "text"
+            go_type: "string"

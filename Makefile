@@ -39,6 +39,10 @@ swag-v1: ### swag init
 	swag init -g internal/controller/restapi/router.go
 .PHONY: swag-v1
 
+sqlc: ### generate source files from sql
+	sqlc generate
+.PHONY: sqlc
+
 proto-v1: ### generate source files from proto
 	protoc --go_out=. \
 		--go_opt=paths=source_relative \
@@ -65,7 +69,7 @@ format: ### Run code formatter
 	gci write . --skip-generated -s standard -s default
 .PHONY: format
 
-run: deps swag-v1 proto-v1 ### swag run for API v1
+run: deps sqlc swag-v1 proto-v1 ### swag run for API v1
 	go mod download && \
 	CGO_ENABLED=0 go run -tags migrate ./cmd/app
 .PHONY: run
@@ -110,6 +114,7 @@ migrate-up: ### migration up
 bin-deps: ### install tools
 	go install tool
 	go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate
+	go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
 .PHONY: bin-deps
 
 pre-commit: swag-v1 proto-v1 mock format linter-golangci test ### run pre-commit

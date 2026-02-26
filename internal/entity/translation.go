@@ -1,5 +1,6 @@
-// Package entity defines main entities for business logic (services), data base mapping and
-// HTTP response objects if suitable. Each logic group entities in own file.
+// Package entity defines main entities for business logic (services).
+// These entities are the "source of truth" and are used throughout the entire application.
+// They are independent of database schema or transport protocols (HTTP/gRPC).
 package entity
 
 // Translation -.

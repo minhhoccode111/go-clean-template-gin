@@ -16,7 +16,7 @@ Clean Architecture template for Golang services
 [![API Documentation](https://img.shields.io/badge/Swagger-API%20Documentation-blue)](https://github.com/swaggo/swag)
 [![Validation](https://img.shields.io/badge/Validator-Data%20Integrity-blue)](https://github.com/go-playground/validator)
 [![JSON Handling](https://img.shields.io/badge/Go--JSON-Fast%20Serialization-blue)](https://github.com/goccy/go-json)
-[![Query Builder](https://img.shields.io/badge/Squirrel-SQL%20Query%20Builder-blue)](https://github.com/Masterminds/squirrel)
+[![Query Builder](https://img.shields.io/badge/sqlc-SQL%20Compiler-blue)](https://sqlc.dev/)
 [![Database Migrations](https://img.shields.io/badge/Migrations-Seamless%20Schema%20Updates-blue)](https://github.com/golang-migrate/migrate)
 [![Logging](https://img.shields.io/badge/ZeroLog-Structured%20Logging-blue)](https://github.com/rs/zerolog)
 [![Metrics](https://img.shields.io/badge/Prometheus-Metrics%20Integration-blue)](https://github.com/zsais/go-gin-prometheus)
@@ -398,9 +398,10 @@ Or more complex business logic:
 
 ### Clean Architecture Terminology
 
-- **Entities** are structures that business logic operates on.
-  They are located in the `internal/entity` folder.
-  In MVC terms, entities are models.
+- **Entities** (`internal/entity`) are the core business objects. They are used throughout the entire application (Use Cases, Controllers, etc.) and are agnostic of storage or transport.
+- **Database Models** (`internal/repo/persistent/sqlc`) are generated code that represents the database schema. They are private to the repository layer.
+- **Mapping:** The repository layer is responsible for converting ("mapping") database models to business entities. This ensures that a change in the database schema does not force a change in the business logic.
+
 - **Use Cases** is business logic located in `internal/usecase`.
 
 The layer with which business logic directly interacts is usually called the _infrastructure_ layer.
