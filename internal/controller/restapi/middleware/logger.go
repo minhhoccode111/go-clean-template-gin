@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"github.com/evrone/go-clean-template/pkg/logger"
+	"github.com/minhhoccode111/go-clean-template-gin/pkg/logger"
 	"github.com/gin-gonic/gin"
 )
 

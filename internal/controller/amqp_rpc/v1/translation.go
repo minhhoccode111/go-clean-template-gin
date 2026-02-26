@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/evrone/go-clean-template/pkg/rabbitmq/rmq_rpc/server"
+	"github.com/minhhoccode111/go-clean-template-gin/pkg/rabbitmq/rmq_rpc/server"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 

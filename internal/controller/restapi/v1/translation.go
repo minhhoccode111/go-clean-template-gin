@@ -3,8 +3,8 @@ package v1
 import (
 	"net/http"
 
-	"github.com/evrone/go-clean-template/internal/controller/restapi/v1/request"
-	"github.com/evrone/go-clean-template/internal/entity"
+	"github.com/minhhoccode111/go-clean-template-gin/internal/controller/restapi/v1/request"
+	"github.com/minhhoccode111/go-clean-template-gin/internal/entity"
 	"github.com/gin-gonic/gin"
 )
 

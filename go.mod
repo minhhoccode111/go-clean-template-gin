@@ -1,4 +1,4 @@
-module github.com/evrone/go-clean-template
+module github.com/minhhoccode111/go-clean-template-gin
 
 go 1.26
 

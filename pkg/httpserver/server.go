@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/evrone/go-clean-template/pkg/logger"
+	"github.com/minhhoccode111/go-clean-template-gin/pkg/logger"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/sync/errgroup"
 )

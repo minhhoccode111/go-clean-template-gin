@@ -3,12 +3,12 @@ package restapi
 import (
 	"net/http"
 
-	"github.com/evrone/go-clean-template/config"
-	_ "github.com/evrone/go-clean-template/docs" // Swagger docs.
-	"github.com/evrone/go-clean-template/internal/controller/restapi/middleware"
-	v1 "github.com/evrone/go-clean-template/internal/controller/restapi/v1"
-	"github.com/evrone/go-clean-template/internal/usecase"
-	"github.com/evrone/go-clean-template/pkg/logger"
+	"github.com/minhhoccode111/go-clean-template-gin/config"
+	_ "github.com/minhhoccode111/go-clean-template-gin/docs" // Swagger docs.
+	"github.com/minhhoccode111/go-clean-template-gin/internal/controller/restapi/middleware"
+	v1 "github.com/minhhoccode111/go-clean-template-gin/internal/controller/restapi/v1"
+	"github.com/minhhoccode111/go-clean-template-gin/internal/usecase"
+	"github.com/minhhoccode111/go-clean-template-gin/pkg/logger"
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -29,7 +29,7 @@ func NewRouter(handler *gin.Engine, cfg *config.Config, t usecase.Translation, l
 
 	// Prometheus metrics
 	if cfg.Metrics.Enabled {
-		p := ginprometheus.NewPrometheus("go-clean-template-gin")
+		p := ginprometheus.NewPrometheus("go-clean-template-gin-gin")
 		p.Use(handler)
 	}
 
