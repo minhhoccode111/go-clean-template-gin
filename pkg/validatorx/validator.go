@@ -8,14 +8,16 @@ import (
 )
 
 // Precompiled regexes — compiled once at package init to avoid repeated allocation on every validation call.
+//
+//nolint:gochecknoglobals // package-level regex vars are intentional: compiled once, read-only after init.
 var (
 	// reTag: letters (any language), digits, underscores, hyphens, and internal spaces.
 	// Must start and end with a letter, digit, underscore, or hyphen — no leading/trailing spaces.
-	// Example matches: "sci-fi", "golang 101", "my_tag"
+	// Example matches: "sci-fi", "golang 101", "my_tag".
 	reTag = regexp.MustCompile(`^[\p{L}0-9_-]([\p{L}0-9_ -]*[\p{L}0-9_-])?$`)
 
 	// reUsername: letters (any language) and digits only. No spaces or special characters.
-	// Example matches: "minhhoccode111", "Ψuser42"
+	// Example matches: "minhhoccode111", "Ψuser42".
 	reUsername = regexp.MustCompile(`^[\p{L}0-9]+$`)
 
 	// rePassword: Go's regexp uses RE2, which does not support lookaheads, so each
@@ -65,6 +67,7 @@ func New() *validator.Validate {
 
 	mustRegister(v, "password", func(fl validator.FieldLevel) bool {
 		p := fl.Field().String()
+
 		return rePassword.upper.MatchString(p) &&
 			rePassword.lower.MatchString(p) &&
 			rePassword.digit.MatchString(p) &&
