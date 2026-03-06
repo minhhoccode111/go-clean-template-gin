@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/minhhoccode111/go-clean-template-gin/pkg/logger"
 	"github.com/gin-gonic/gin"
+	"github.com/minhhoccode111/go-clean-template-gin/pkg/logger"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -59,6 +59,7 @@ func New(l logger.Interface, opts ...Option) *Server {
 	}
 
 	gin.SetMode(gin.ReleaseMode)
+
 	engine := gin.New()
 
 	s.Engine = engine

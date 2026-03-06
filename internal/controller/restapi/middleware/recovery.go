@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"runtime/debug"
 
-	"github.com/minhhoccode111/go-clean-template-gin/pkg/logger"
 	"github.com/gin-gonic/gin"
+	"github.com/minhhoccode111/go-clean-template-gin/pkg/logger"
 )
 
 func Recovery(l logger.Interface) gin.HandlerFunc {

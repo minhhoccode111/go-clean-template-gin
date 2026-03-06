@@ -3,9 +3,9 @@ package v1
 import (
 	"net/http"
 
+	"github.com/gin-gonic/gin"
 	"github.com/minhhoccode111/go-clean-template-gin/internal/controller/restapi/v1/request"
 	"github.com/minhhoccode111/go-clean-template-gin/internal/entity"
-	"github.com/gin-gonic/gin"
 )
 
 // @Summary     Show history

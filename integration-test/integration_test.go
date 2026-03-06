@@ -11,10 +11,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/goccy/go-json"
 	protov1 "github.com/minhhoccode111/go-clean-template-gin/docs/proto/v1"
 	natsClient "github.com/minhhoccode111/go-clean-template-gin/pkg/nats/nats_rpc/client"
 	rmqClient "github.com/minhhoccode111/go-clean-template-gin/pkg/rabbitmq/rmq_rpc/client"
-	"github.com/goccy/go-json"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )

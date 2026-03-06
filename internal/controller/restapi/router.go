@@ -3,13 +3,13 @@ package restapi
 import (
 	"net/http"
 
+	"github.com/gin-gonic/gin"
 	"github.com/minhhoccode111/go-clean-template-gin/config"
 	_ "github.com/minhhoccode111/go-clean-template-gin/docs" // Swagger docs.
 	"github.com/minhhoccode111/go-clean-template-gin/internal/controller/restapi/middleware"
 	v1 "github.com/minhhoccode111/go-clean-template-gin/internal/controller/restapi/v1"
 	"github.com/minhhoccode111/go-clean-template-gin/internal/usecase"
 	"github.com/minhhoccode111/go-clean-template-gin/pkg/logger"
-	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	ginprometheus "github.com/zsais/go-gin-prometheus"
