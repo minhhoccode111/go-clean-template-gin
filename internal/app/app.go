@@ -21,11 +21,13 @@ import (
 	natsRPCServer "github.com/minhhoccode111/go-clean-template-gin/pkg/nats/nats_rpc/server"
 	"github.com/minhhoccode111/go-clean-template-gin/pkg/postgres"
 	rmqRPCServer "github.com/minhhoccode111/go-clean-template-gin/pkg/rabbitmq/rmq_rpc/server"
+	"github.com/minhhoccode111/go-clean-template-gin/pkg/validatorx"
 )
 
 // Run creates objects via constructors.
 func Run(cfg *config.Config) { //nolint: gocyclo,cyclop,funlen,gocritic,nolintlint
 	l := logger.New(cfg.Log.Level)
+	v := validatorx.New()
 
 	// Repository
 	pg, err := postgres.New(cfg.PG.URL, postgres.MaxPoolSize(cfg.PG.PoolMax))
@@ -62,7 +64,7 @@ func Run(cfg *config.Config) { //nolint: gocyclo,cyclop,funlen,gocritic,nolintli
 
 	// HTTP Server
 	httpServer := httpserver.New(l, httpserver.Port(cfg.HTTP.Port))
-	restapi.NewRouter(httpServer.Engine, cfg, translationUseCase, l)
+	restapi.NewRouter(httpServer.Engine, cfg, translationUseCase, l, v)
 
 	// Start servers
 	rmqServer.Start()

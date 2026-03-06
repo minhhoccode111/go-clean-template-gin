@@ -8,8 +8,13 @@ import (
 )
 
 // NewTranslationRoutes -.
-func NewTranslationRoutes(apiV1Group *gin.RouterGroup, t usecase.Translation, l logger.Interface) {
-	r := &V1{t: t, l: l, v: validator.New(validator.WithRequiredStructEnabled())}
+func NewTranslationRoutes(
+	apiV1Group *gin.RouterGroup,
+	t usecase.Translation,
+	l logger.Interface,
+	v *validator.Validate,
+) {
+	r := &V1{t: t, l: l, v: v}
 
 	translationGroup := apiV1Group.Group("/translation")
 

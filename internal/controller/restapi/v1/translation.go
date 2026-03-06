@@ -2,10 +2,12 @@ package v1
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/minhhoccode111/go-clean-template-gin/internal/controller/restapi/v1/request"
 	"github.com/minhhoccode111/go-clean-template-gin/internal/entity"
+	"github.com/minhhoccode111/go-clean-template-gin/pkg/validatorx"
 )
 
 // @Summary     Show history
@@ -55,7 +57,9 @@ func (r *V1) doTranslate(c *gin.Context) {
 	if err := r.v.Struct(body); err != nil {
 		r.l.Error(err, "restapi - v1 - doTranslate")
 
-		errorResponse(c, http.StatusBadRequest, "invalid request body")
+		errs := validatorx.ExtractErrors(err)
+
+		errorResponse(c, http.StatusBadRequest, strings.Join(errs, "; "))
 
 		return
 	}

@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 	"github.com/minhhoccode111/go-clean-template-gin/config"
 	_ "github.com/minhhoccode111/go-clean-template-gin/docs" // Swagger docs.
 	"github.com/minhhoccode111/go-clean-template-gin/internal/controller/restapi/middleware"
@@ -22,7 +23,13 @@ import (
 // @version     1.0
 // @host        localhost:8080
 // @BasePath    /v1
-func NewRouter(handler *gin.Engine, cfg *config.Config, t usecase.Translation, l logger.Interface) {
+func NewRouter(
+	handler *gin.Engine,
+	cfg *config.Config,
+	t usecase.Translation,
+	l logger.Interface,
+	v *validator.Validate,
+) {
 	// Options
 	handler.Use(middleware.Logger(l))
 	handler.Use(middleware.Recovery(l))
@@ -44,6 +51,6 @@ func NewRouter(handler *gin.Engine, cfg *config.Config, t usecase.Translation, l
 	// Routers
 	apiV1Group := handler.Group("/v1")
 	{
-		v1.NewTranslationRoutes(apiV1Group, t, l)
+		v1.NewTranslationRoutes(apiV1Group, t, l, v)
 	}
 }
