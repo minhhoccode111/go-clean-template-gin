@@ -3,6 +3,7 @@
 package cache
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -60,4 +61,28 @@ func (c *Cache[K, V]) Set(key K, value V) bool {
 // Delete removes the entry for key, if it exists.
 func (c *Cache[K, V]) Delete(key K) {
 	c.c.Invalidate(key)
+}
+
+// GetOrLoad returns the cached value for key.
+// On a cache miss it calls load, stores the result with the cache's default TTL,
+// and returns it. Concurrent calls for the same key are deduplicated — only one
+// loader is invoked and the rest wait for that result (singleflight semantics).
+func (c *Cache[K, V]) GetOrLoad(
+	ctx context.Context,
+	key K,
+	load func(context.Context, K) (V, error),
+) (V, error) {
+	return c.c.Get(ctx, key, otter.LoaderFunc[K, V](load))
+}
+
+// SetWithTTL stores value under key with an explicit TTL, overriding the
+// cache-wide default for this entry only.
+// Returns false if the entry was not admitted (e.g. cost > capacity).
+func (c *Cache[K, V]) SetWithTTL(key K, value V, ttl time.Duration) bool {
+	_, ok := c.c.Set(key, value)
+	if ok {
+		c.c.SetExpiresAfter(key, ttl)
+	}
+
+	return ok
 }
