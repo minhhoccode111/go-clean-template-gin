@@ -20,7 +20,7 @@ type test struct {
 	err  error
 }
 
-func translationUseCase(t *testing.T) (*translation.UseCase, *MockTranslationRepo, *MockTranslationWebAPI) {
+func translationUseCase(t *testing.T) (*translation.UseCase, *MockTranslationRepo, *MockTranslationWebAPI, *MockTranslationCache) {
 	t.Helper()
 
 	mockCtl := gomock.NewController(t)
@@ -28,29 +28,42 @@ func translationUseCase(t *testing.T) (*translation.UseCase, *MockTranslationRep
 
 	repo := NewMockTranslationRepo(mockCtl)
 	webAPI := NewMockTranslationWebAPI(mockCtl)
+	cache := NewMockTranslationCache(mockCtl)
 
-	useCase := translation.New(repo, webAPI)
+	useCase := translation.New(repo, webAPI, cache)
 
-	return useCase, repo, webAPI
+	return useCase, repo, webAPI, cache
 }
 
 func TestHistory(t *testing.T) { //nolint:tparallel // data races here
 	t.Parallel()
 
-	translationUseCase, repo, _ := translationUseCase(t)
+	translationUseCase, repo, _, cache := translationUseCase(t)
 
 	tests := []test{
 		{
-			name: "empty result",
+			name: "cache miss - empty result from db",
 			mock: func() {
+				cache.EXPECT().GetHistory(context.Background()).Return(nil, false)
 				repo.EXPECT().GetHistory(context.Background()).Return(nil, nil)
+				cache.EXPECT().SetHistory(context.Background(), []entity.Translation(nil)).Return(true)
 			},
 			res: entity.TranslationHistory{},
 			err: nil,
 		},
 		{
-			name: "result with error",
+			name: "cache hit",
 			mock: func() {
+				cached := []entity.Translation{{Original: "hello", Translation: "привет"}}
+				cache.EXPECT().GetHistory(context.Background()).Return(cached, true)
+			},
+			res: entity.TranslationHistory{History: []entity.Translation{{Original: "hello", Translation: "привет"}}},
+			err: nil,
+		},
+		{
+			name: "cache miss - repo error",
+			mock: func() {
+				cache.EXPECT().GetHistory(context.Background()).Return(nil, false)
 				repo.EXPECT().GetHistory(context.Background()).Return(nil, errInternalServErr)
 			},
 			res: entity.TranslationHistory{},
@@ -75,14 +88,15 @@ func TestHistory(t *testing.T) { //nolint:tparallel // data races here
 func TestTranslate(t *testing.T) { //nolint:tparallel // data races here
 	t.Parallel()
 
-	translationUseCase, repo, webAPI := translationUseCase(t)
+	translationUseCase, repo, webAPI, cache := translationUseCase(t)
 
 	tests := []test{
 		{
-			name: "empty result",
+			name: "success - cache invalidated",
 			mock: func() {
 				webAPI.EXPECT().Translate(entity.Translation{}).Return(entity.Translation{}, nil)
 				repo.EXPECT().Store(context.Background(), entity.Translation{}).Return(nil)
+				cache.EXPECT().InvalidateHistory(context.Background())
 			},
 			res: entity.Translation{},
 			err: nil,

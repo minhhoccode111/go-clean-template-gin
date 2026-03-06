@@ -12,9 +12,12 @@ import (
 	"github.com/minhhoccode111/go-clean-template-gin/internal/controller/grpc"
 	natsrpc "github.com/minhhoccode111/go-clean-template-gin/internal/controller/nats_rpc"
 	"github.com/minhhoccode111/go-clean-template-gin/internal/controller/restapi"
+	"github.com/minhhoccode111/go-clean-template-gin/internal/entity"
+	repocache "github.com/minhhoccode111/go-clean-template-gin/internal/repo/cache"
 	"github.com/minhhoccode111/go-clean-template-gin/internal/repo/persistent"
 	"github.com/minhhoccode111/go-clean-template-gin/internal/repo/webapi"
 	"github.com/minhhoccode111/go-clean-template-gin/internal/usecase/translation"
+	"github.com/minhhoccode111/go-clean-template-gin/pkg/cache"
 	"github.com/minhhoccode111/go-clean-template-gin/pkg/grpcserver"
 	"github.com/minhhoccode111/go-clean-template-gin/pkg/httpserver"
 	"github.com/minhhoccode111/go-clean-template-gin/pkg/logger"
@@ -36,10 +39,20 @@ func Run(cfg *config.Config) { //nolint: gocyclo,cyclop,funlen,gocritic,nolintli
 	}
 	defer pg.Close()
 
+	// Cache
+	otterCache, err := cache.New[string, []entity.Translation](
+		cache.MaxCost(cfg.Cache.MaxCost),
+		cache.TTL(cfg.Cache.TTL),
+	)
+	if err != nil {
+		l.Fatal(fmt.Errorf("app - Run - ottercache.New: %w", err))
+	}
+
 	// Use-Case
 	translationUseCase := translation.New(
 		persistent.New(pg),
 		webapi.New(),
+		repocache.New(otterCache),
 	)
 
 	// RabbitMQ RPC Server

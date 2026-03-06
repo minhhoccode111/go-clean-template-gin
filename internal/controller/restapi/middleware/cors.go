@@ -17,7 +17,8 @@ import (
 func CORS(cfg config.CORS) gin.HandlerFunc {
 	// Pre-compute the set of allowed origins once at startup.
 	allowedOrigins := make(map[string]struct{})
-	for _, o := range strings.Split(cfg.AllowOrigins, ",") {
+
+	for o := range strings.SplitSeq(cfg.AllowOrigins, ",") {
 		if trimmed := strings.TrimSpace(o); trimmed != "" {
 			allowedOrigins[trimmed] = struct{}{}
 		}
@@ -36,7 +37,7 @@ func CORS(cfg config.CORS) gin.HandlerFunc {
 			c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
 		} else if _, ok := allowedOrigins[origin]; ok {
 			// Reflect the matched origin — required for credentials and
-			// the only correct behaviour for a multi-origin allow-list.
+			// the only correct behavior for a multi-origin allow-list.
 			c.Writer.Header().Set("Access-Control-Allow-Origin", origin)
 		}
 		// If the origin is not in the list we simply omit the header,
@@ -50,6 +51,7 @@ func CORS(cfg config.CORS) gin.HandlerFunc {
 		if c.Request.Method == http.MethodOptions {
 			c.Writer.Header().Set("Access-Control-Max-Age", "86400")
 			c.AbortWithStatus(http.StatusNoContent)
+
 			return
 		}
 

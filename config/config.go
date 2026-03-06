@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/caarlos0/env/v11"
 )
@@ -19,6 +20,7 @@ type (
 		Metrics Metrics
 		Swagger Swagger
 		CORS    CORS
+		Cache   Cache
 	}
 
 	// App -.
@@ -77,6 +79,12 @@ type (
 		AllowCredentials bool   `env:"CORS_ALLOW_CREDENTIALS,required"`
 		AllowHeaders     string `env:"CORS_ALLOW_HEADERS,required"`
 		AllowMethods     string `env:"CORS_ALLOW_METHODS,required"`
+	}
+
+	// Cache -.
+	Cache struct {
+		MaxCost int           `env:"CACHE_MAX_COST" envDefault:"10000"`
+		TTL     time.Duration `env:"CACHE_TTL"      envDefault:"5m"`
 	}
 )
 
