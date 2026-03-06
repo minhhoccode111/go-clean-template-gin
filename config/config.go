@@ -18,6 +18,7 @@ type (
 		NATS    NATS
 		Metrics Metrics
 		Swagger Swagger
+		CORS    CORS
 	}
 
 	// App -.
@@ -68,6 +69,14 @@ type (
 	// Swagger -.
 	Swagger struct {
 		Enabled bool `env:"SWAGGER_ENABLED" envDefault:"false"`
+	}
+
+	// CORS -.
+	CORS struct {
+		AllowOrigins     string `env:"CORS_ALLOW_ORIGINS,required"`
+		AllowCredentials bool   `env:"CORS_ALLOW_CREDENTIALS,required"`
+		AllowHeaders     string `env:"CORS_ALLOW_HEADERS,required"`
+		AllowMethods     string `env:"CORS_ALLOW_METHODS,required"`
 	}
 )
 
