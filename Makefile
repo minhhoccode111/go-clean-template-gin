@@ -74,6 +74,11 @@ run: deps sqlc swag-v1 proto-v1 ### swag run for API v1
 	CGO_ENABLED=0 go run -tags migrate ./cmd/app
 .PHONY: run
 
+build: deps sqlc swag-v1 proto-v1 ### build the application
+	go mod download && \
+	CGO_ENABLED=0 go build -o ./main ./cmd/app
+.PHONY: build
+
 docker-rm-volume: ### remove docker volume
 	docker volume rm go-clean-template-gin_pg-data
 .PHONY: docker-rm-volume
@@ -83,7 +88,7 @@ linter-golangci: ### check by golangci linter
 .PHONY: linter-golangci
 
 linter-hadolint: ### check by hadolint linter
-	git ls-files --exclude='Dockerfile*' --ignored | xargs hadolint
+	find . -name "Dockerfile*" | xargs hadolint
 .PHONY: linter-hadolint
 
 linter-dotenv: ### check by dotenv linter
@@ -103,13 +108,30 @@ mock: ### run mockgen
 	mockgen -source ./internal/usecase/contracts.go -package usecase_test > ./internal/usecase/mocks_usecase_test.go
 .PHONY: mock
 
-migrate-create:  ### create new migration
-	migrate create -ext sql -dir migrations '$(word 2,$(MAKECMDGOALS))'
+migrate-create:  ### create new migration with name="$(name)"
+	migrate create -ext sql -dir migrations "$(name)"
 .PHONY: migrate-create
 
 migrate-up: ### migration up
 	migrate -path migrations -database '$(PG_URL)?sslmode=disable' up
 .PHONY: migrate-up
+
+migrate-down: ### rollback last migration
+	migrate -path migrations -database '$(PG_URL)?sslmode=disable' down 1
+.PHONY: migrate-down
+
+migrate-redo: ### rollback and reapply last migration
+	migrate -path migrations -database '$(PG_URL)?sslmode=disable' down 1
+	migrate -path migrations -database '$(PG_URL)?sslmode=disable' up 1
+.PHONY: migrate-redo
+
+migrate-status: ### show migration version
+	migrate -path migrations -database '$(PG_URL)?sslmode=disable' version
+.PHONY: migrate-status
+
+migrate-list: ### list migrations, order by modified date
+	ls -l migrations/*.up.sql
+.PHONY: migrate-list
 
 bin-deps: ### install tools
 	go install tool
