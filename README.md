@@ -4,6 +4,7 @@
 
 [🇨🇳 中文](README_CN.md)
 [🇷🇺 RU](README_RU.md)
+[🇻🇳 VI](README_VI.md)
 
 Clean Architecture template for Golang services
 
@@ -24,6 +25,13 @@ Clean Architecture template for Golang services
 [![Mocking](https://img.shields.io/badge/Mock-Mocking%20Library-blue)](https://go.uber.org/mock)
 
 ## Overview
+
+This is a fork of [go-clean-template](https://github.com/evrone/go-clean-template) but:
+
+- Replace Fiber with Gin
+- Replace Squirrel with Sqlc
+- Add validatorx wrapper in `pkg`
+- Add Otter cache in `pkg`
 
 The purpose of the template is to show:
 
@@ -73,7 +81,7 @@ make compose-up-integration-test
 ### Full docker stack with reverse proxy
 
 ```sh
-make compose-up-all 
+make compose-up-all
 ```
 
 Check services:
@@ -270,6 +278,11 @@ Repositories, webapi, rpc, and other business logic structures are injected into
 
 A repository is an abstract storage (database) that business logic works with.
 
+#### `internal/repo/cache`
+
+It is an abstract cache storage that business logic works with.
+It uses an adapter pattern to interact with concrete cache implementations (like Otter in `pkg/cache`).
+
 #### `internal/repo/webapi`
 
 It is an abstract web API that business logic works with.
@@ -283,6 +296,14 @@ RabbitMQ RPC pattern:
 - There is no routing inside RabbitMQ
 - Exchange fanout is used, to which 1 exclusive queue is bound, this is the most productive config
 - Reconnect on the loss of connection
+
+### `pkg/cache`
+
+Memory cache based on [Otter](https://github.com/maypok86/otter):
+
+- High-performance, thread-safe in-memory cache
+- Support for TTL expiration and max cost limits
+- Built-in `GetOrLoad` with singleflight semantics to prevent cache stampedes
 
 ## Dependency Injection
 
@@ -443,10 +464,11 @@ _Ports and adapters_ are very close to _Clean Architecture_, the differences are
 
 ## Similar projects
 
+- [https://github.com/evrone/go-clean-template](https://github.com/evrone/go-clean-template)
 - [https://github.com/bxcodec/go-clean-arch](https://github.com/bxcodec/go-clean-arch)
 - [https://github.com/zhashkevych/courses-backend](https://github.com/zhashkevych/courses-backend)
 
 ## Useful links
 
 - [The Clean Architecture article](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)
-- [Twelve factors](https://12factor.net/ru/)
+- [Twelve factors](https://12factor.net/)

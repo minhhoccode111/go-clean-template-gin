@@ -2,6 +2,10 @@
 
 # Go 整洁模板
 
+[🇬🇧 English](README.md)
+[🇷🇺 RU](README_RU.md)
+[🇻🇳 VI](README_VI.md)
+
 golang服务的整洁架构模板
 
 [![Release](https://img.shields.io/github/v/release/minhhoccode111/go-clean-template-gin.svg)](https://github.com/minhhoccode111/go-clean-template-gin/releases/)
@@ -68,7 +72,7 @@ make compose-up-integration-test
 ### Full docker stack with reverse proxy
 
 ```sh
-make compose-up-all 
+make compose-up-all
 ```
 
 Check services:
@@ -166,8 +170,8 @@ go run -tags migrate ./cmd/app
 
 #### `internal/controller/amqp_rpc`
 
-简单的 RPC 版本控制。  
-对于 v2，我们需要添加 `amqp_rpc/v2` 文件夹，内容相同。  
+简单的 RPC 版本控制。
+对于 v2，我们需要添加 `amqp_rpc/v2` 文件夹，内容相同。
 并在文件 `internal/controller/amqp_rpc/router.go` 中添加以下行：
 
 ```go
@@ -184,9 +188,9 @@ routes := make(map[string]server.CallHandler)
 
 #### `internal/controller/grpc`
 
-简单的 gRPC 版本控制。  
-对于 v2，我们需要添加 `grpc/v2` 文件夹，内容相同。  
-还需要将 `v2` 文件夹添加到 `docs/proto` 中的 proto 文件中。  
+简单的 gRPC 版本控制。
+对于 v2，我们需要添加 `grpc/v2` 文件夹，内容相同。
+还需要将 `v2` 文件夹添加到 `docs/proto` 中的 proto 文件中。
 并在文件 `internal/controller/grpc/router.go` 中添加以下行：
 
 ```go
@@ -203,8 +207,8 @@ reflection.Register(app)
 
 #### `internal/controller/nats_rpc`
 
-简单的 RPC 版本控制。  
-对于 v2，我们需要添加 `nats_rpc/v2` 文件夹，内容相同。  
+简单的 RPC 版本控制。
+对于 v2，我们需要添加 `nats_rpc/v2` 文件夹，内容相同。
 并在文件 `internal/controller/nats_rpc/router.go` 中添加以下行：
 
 ```go
@@ -258,6 +262,11 @@ apiV2Group := app.Group("/v2")
 
 是持久化存储的业务逻辑逻辑抽象,如数据库.
 
+#### `internal/repo/cache`
+
+是缓存存储的业务逻辑抽象.
+它使用适配器模式来接入具体的缓存实现（如 `pkg/cache` 中的 Otter 缓存）.
+
 #### `internal/repo/webapi`
 
 是webapi业务逻辑使用的抽象.
@@ -271,6 +280,14 @@ RabbitMQ RPC 模式：
 - RabbitMQ 中没有路由
 - 使用Exchange fanout出并绑定 1 个独占队列，这么配置是最高效的
 - 在连接丢失时重新连接
+
+### `pkg/cache`
+
+基于 [Otter](https://github.com/maypok86/otter) 的内存缓存：
+
+- 高性能、线程安全的内存缓存
+- 支持 TTL 过期和最大成本限制
+- 内置带有 singleflight 语义的 `GetOrLoad`，以防止缓存击穿 (cache stampede)
 
 ## 依赖注入
 
@@ -417,6 +434,7 @@ _______________________________
 
 ## 相似的工程
 
+- [https://github.com/evrone/go-clean-template](https://github.com/evrone/go-clean-template)
 - [https://github.com/bxcodec/go-clean-arch](https://github.com/bxcodec/go-clean-arch)
 - [https://github.com/zhashkevych/courses-backend](https://github.com/zhashkevych/courses-backend)
 

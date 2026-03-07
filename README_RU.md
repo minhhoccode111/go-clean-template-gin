@@ -2,6 +2,10 @@
 
 # Go Чистая Архитектура
 
+[🇬🇧 English](README.md)
+[🇨🇳 中文](README_CN.md)
+[🇻🇳 VI](README_VI.md)
+
 Шаблон Чистой Архитектуры для приложений на Golang
 
 [![Release](https://img.shields.io/github/v/release/minhhoccode111/go-clean-template-gin.svg)](https://github.com/minhhoccode111/go-clean-template-gin/releases/)
@@ -34,9 +38,9 @@
 Этот шаблон поддерживает три типа серверов:
 
 - AMQP RPC (на основе RabbitMQ в качестве [транспорта](https://github.com/rabbitmq/amqp091-go)
-  и [Request-Reply паттерна]((https://www.enterpriseintegrationpatterns.com/patterns/messaging/RequestReply.html)))
+  и [Request-Reply паттерна](<(https://www.enterpriseintegrationpatterns.com/patterns/messaging/RequestReply.html)>))
 - NATS RPC (на основе NATS в качестве [транспорта](https://github.com/nats-io/nats.go)
-  и [Request-Reply паттерна]((https://www.enterpriseintegrationpatterns.com/patterns/messaging/RequestReply.html))))
+  и [Request-Reply паттерна](<(https://www.enterpriseintegrationpatterns.com/patterns/messaging/RequestReply.html)>)))
 - gRPC ([gRPC](https://grpc.io/) фреймворк на основе protobuf)
 - REST API ([Gin](https://github.com/gin-gonic/gin) фреймворк)
 
@@ -68,7 +72,7 @@ make compose-up-integration-test
 ### Весь docker stack с reverse proxy
 
 ```sh
-make compose-up-all 
+make compose-up-all
 ```
 
 Проверьте сервисы:
@@ -188,9 +192,9 @@ routes := make(map[string]server.CallHandler)
 
 #### `internal/controller/grpc`
 
-Простое версионирование gRPC.  
-Для версии v2 нужно будет добавить папку `grpc/v2` с таким же содержимым.  
-Также добавьте папку `v2` в proto-файлы в `docs/proto`.  
+Простое версионирование gRPC.
+Для версии v2 нужно будет добавить папку `grpc/v2` с таким же содержимым.
+Также добавьте папку `v2` в proto-файлы в `docs/proto`.
 И в файле `internal/controller/grpc/router.go` добавьте строку:
 
 ```go
@@ -265,6 +269,11 @@ swagger [swag](https://github.com/swaggo/swag).
 
 Репозиторий — это абстрактное хранилище (база данных), с которым взаимодействует бизнес-логика.
 
+#### `internal/repo/cache`
+
+Это абстрактное хранилище кэша, с которым взаимодействует бизнес-логика.
+Использует паттерн адаптер для взаимодействия с конкретными реализациями кэша (например, Otter в `pkg/cache`).
+
 #### `internal/repo/webapi`
 
 Это абстрактное web API, с которым взаимодействует бизнес-логика.
@@ -278,6 +287,14 @@ RabbitMQ RPC паттерн:
 - Внутри RabbitMQ не используется маршрутизация
 - Используется fanout-обмен, к которому привязана одна эксклюзивная очередь - это наиболее производительная конфигурация
 - Переподключение при потере соединения
+
+### `pkg/cache`
+
+Кэш в памяти на основе [Otter](https://github.com/maypok86/otter):
+
+- Высокопроизводительный, потокобезопасный кэш в памяти
+- Поддержка истечения срока действия TTL и ограничения максимальной стоимости
+- Встроенный `GetOrLoad` с семантикой singleflight для предотвращения лавинообразных запросов к кэшу (cache stampede)
 
 ## Внедрение зависимостей
 
@@ -439,6 +456,7 @@ func (uc *UseCase) Do() {
 
 ## Похожие проекты
 
+- [https://github.com/evrone/go-clean-template](https://github.com/evrone/go-clean-template)
 - [https://github.com/bxcodec/go-clean-arch](https://github.com/bxcodec/go-clean-arch)
 - [https://github.com/zhashkevych/courses-backend](https://github.com/zhashkevych/courses-backend)
 
