@@ -69,6 +69,9 @@ Mẫu thiết kế này triển khai ba loại máy chủ:
 make compose-up
 # Chạy ứng dụng cùng với các thao tác di chuyển cơ sở dữ liệu (migrations)
 make run
+# Hoặc air
+air
+# Hoặc debugger (nhấn F5 để dùng với .vscode/launch.json)
 ```
 
 ### Kiểm thử tích hợp (có thể chạy trên hệ thống CI)

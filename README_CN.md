@@ -60,6 +60,9 @@ golang服务的整洁架构模板
 make compose-up
 # Run app with migrations
 make run
+# Or air
+air
+# Or debugger (F5 to use with .vscode/launch.json)
 ```
 
 ### Integration tests (can be run in CI)
@@ -120,7 +123,7 @@ Check services:
 
 ### `docs`
 
-Swagger 文档。由  [swag](https://github.com/swaggo/swag) 库自动生成
+Swagger 文档。由 [swag](https://github.com/swaggo/swag) 库自动生成
 你不需要自己修改任何内容
 
 #### `docs/proto`
@@ -141,7 +144,7 @@ Protobuf 文件。它们用于为 gRPC 服务生成 Go 代码。
 主要的对象在这里生成
 依赖注入通过 "New ..." 构造 (阅读依赖注入)，这个技术允许使用[依赖注入](#依赖注入)的原则进行分层，使得业务逻辑独立于其他层。
 
-接下来，我们启动服务器并阻塞等待_select_ 中的信号正常完成。
+接下来，我们启动服务器并阻塞等待*select* 中的信号正常完成。
 
 如果 `app.go`的规模增长了，你可以将它拆分为多个文件.
 
@@ -297,6 +300,7 @@ RabbitMQ RPC 模式：
 我们可以覆盖接口的实现，而无需更改 `usecase` 包.
 
 它还将允许我们自动生成相关mock（例如使用 [mockery](https://github.com/vektra/mockery)），以便进行单元测试.
+
 > 我们不依赖于特定的实现，以便始终能够将一个组件更改为另一个组件
 > 如果新组件实现了接口，则业务逻辑无需更改。
 
@@ -401,7 +405,7 @@ HTTP 和数据库都在外层，这意味着他们彼此无法感知
   在 MVC 术语中，实体是models
 
 - **Use Cases** 业务逻辑位于 `internal/usecase` 中
-  与业务逻辑直接交互的层通常称为_infrastructure_ 层
+  与业务逻辑直接交互的层通常称为*infrastructure* 层
   这些可以是存储库 `internal/usecase/repo`、外部 webapi `internal/usecase/webapi`、任何包和其他微服务。
   在模板中，_infrastructure_ 包位于 `internal/usecase` 中
 
@@ -424,7 +428,9 @@ HTTP 和数据库都在外层，这意味着他们彼此无法感知
 彼此（向内）通过接口进行通信
 
 在复杂逻辑的情况下，内层也分为两层（通过接口进行分层）
-_______________________________
+
+---
+
 复杂的工具可以通过分层设计。切记只有在你有需要的时候菜进行分层
 
 ### 替代品

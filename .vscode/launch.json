@@ -1,0 +1,35 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Launch main application",
+      "type": "go",
+      "request": "launch",
+      "mode": "debug",
+      "program": "${workspaceFolder}/cmd/app",
+      "args": ["-tags", "migrate"],
+      "env": {
+        "APP_NAME": "go-clean-template-gin",
+        "APP_VERSION": "1.0.0",
+        "CACHE_MAX_COST": "10000",
+        "CACHE_TTL": "5m",
+        "CORS_ALLOW_CREDENTIALS": "true",
+        "CORS_ALLOW_HEADERS": "Origin,X-Requested-With,Content-Type,Accept,Authorization",
+        "CORS_ALLOW_METHODS": "GET,POST,HEAD,PUT,DELETE,PATCH",
+        "CORS_ALLOW_ORIGINS": "http://localhost:3000,https://example.com",
+        "GRPC_PORT": "8081",
+        "HTTP_PORT": "8080",
+        "LOG_LEVEL": "debug",
+        "METRICS_ENABLED": "true",
+        "NATS_RPC_SERVER": "rpc_server",
+        "NATS_URL": "nats://guest:guest@localhost:4222/",
+        "PG_POOL_MAX": "2",
+        "PG_URL": "postgres://user:password@localhost:5432/db",
+        "RMQ_RPC_CLIENT": "rpc_client",
+        "RMQ_RPC_SERVER": "rpc_server",
+        "RMQ_URL": "amqp://guest:guest@localhost:5672/",
+        "SWAGGER_ENABLED": "true"
+      }
+    }
+  ]
+}

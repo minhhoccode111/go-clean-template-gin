@@ -60,6 +60,9 @@
 make compose-up
 # Запуск приложения и миграций
 make run
+# Or air
+air
+# Or debugger (F5 to use with .vscode/launch.json)
 ```
 
 ### Интеграционные тесты (может быть использовано с CI)

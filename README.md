@@ -69,6 +69,9 @@ This template implements three types of servers:
 make compose-up
 # Run app with migrations
 make run
+# Or air
+air
+# Or debugger (F5 to use with .vscode/launch.json)
 ```
 
 ### Integration tests (can be run in CI)
