@@ -10,17 +10,18 @@ import (
 type (
 	// Config -.
 	Config struct {
-		App     App
-		HTTP    HTTP
-		Log     Log
-		PG      PG
-		GRPC    GRPC
-		RMQ     RMQ
-		NATS    NATS
-		Metrics Metrics
-		Swagger Swagger
-		CORS    CORS
-		Cache   Cache
+		App       App
+		HTTP      HTTP
+		Log       Log
+		PG        PG
+		GRPC      GRPC
+		RMQ       RMQ
+		NATS      NATS
+		Metrics   Metrics
+		Swagger   Swagger
+		CORS      CORS
+		Cache     Cache
+		RateLimit RateLimit
 	}
 
 	// App -.
@@ -85,6 +86,12 @@ type (
 	Cache struct {
 		MaxCost int           `env:"CACHE_MAX_COST" envDefault:"10000"`
 		TTL     time.Duration `env:"CACHE_TTL"      envDefault:"5m"`
+	}
+
+	// RateLimit -.
+	RateLimit struct {
+		RequestsPerSecond float64 `env:"RATE_LIMIT_RPS"   envDefault:"10"`
+		Burst             int     `env:"RATE_LIMIT_BURST" envDefault:"20"`
 	}
 )
 
