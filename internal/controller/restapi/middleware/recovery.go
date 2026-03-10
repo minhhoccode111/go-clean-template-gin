@@ -5,6 +5,7 @@ import (
 	"runtime/debug"
 
 	"github.com/gin-gonic/gin"
+	"github.com/minhhoccode111/go-clean-template-gin/internal/controller/restapi/v1/response"
 	"github.com/minhhoccode111/go-clean-template-gin/pkg/logger"
 )
 
@@ -20,7 +21,9 @@ func Recovery(l logger.Interface) gin.HandlerFunc {
 					debug.Stack(),
 				)
 
-				c.AbortWithStatus(http.StatusInternalServerError)
+				c.AbortWithStatusJSON(http.StatusInternalServerError, response.Error{
+					Error: "Internal Server Error",
+				})
 			}
 		}()
 

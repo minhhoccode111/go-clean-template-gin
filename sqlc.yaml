@@ -1,7 +1,7 @@
 version: "2"
 sql:
   - schema: "migrations"
-    queries: "internal/repo/persistent/query.sql"
+    queries: "internal/repo/persistent/queries"
     engine: "postgresql"
     gen:
       go:
