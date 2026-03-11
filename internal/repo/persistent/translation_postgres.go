@@ -47,15 +47,29 @@ func (r *TranslationRepo) GetHistory(ctx context.Context) ([]entity.Translation,
 }
 
 // Store -.
+// An example of a transactional store with sqlc.
 func (r *TranslationRepo) Store(ctx context.Context, t entity.Translation) error {
-	err := r.queries.Store(ctx, sqlc.StoreParams{
+	tx, err := r.Pool.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("TranslationRepo - Store - r.Pool.Begin: %w", err)
+	}
+
+	defer tx.Rollback(ctx) //nolint:errcheck // standard practice to ignore this
+
+	queriesTx := r.queries.WithTx(tx)
+
+	err = queriesTx.Store(ctx, sqlc.StoreParams{
 		Source:      t.Source,
 		Destination: t.Destination,
 		Original:    t.Original,
 		Translation: t.Translation,
 	})
 	if err != nil {
-		return fmt.Errorf("TranslationRepo - Store - r.queries.Store: %w", err)
+		return fmt.Errorf("TranslationRepo - Store - qtx.Store: %w", err)
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return fmt.Errorf("TranslationRepo - Store - tx.Commit: %w", err)
 	}
 
 	return nil
