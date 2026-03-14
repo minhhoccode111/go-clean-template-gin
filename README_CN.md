@@ -51,6 +51,16 @@ golang服务的整洁架构模板
 - [依赖注入](#依赖注入)
 - [整洁架构](#整洁架构)
 
+## 清理模板 (仅限 Gin REST API)
+
+如果您只需要一个简单的 REST API 并且想从项目中删除 gRPC、NATS 和 RabbitMQ，您可以运行提供的清理脚本：
+
+```sh
+./remove_rpc.sh
+```
+
+这将自动剥离所有与 RPC 相关的代码、依赖项、docker 配置和测试，留下一个干净的 Gin REST API 模板。
+
 ## Quick start
 
 ### Local development

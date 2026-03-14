@@ -32,6 +32,7 @@ This is a fork of [go-clean-template](https://github.com/evrone/go-clean-templat
 - Replace Squirrel with Sqlc
 - Add validatorx wrapper in `pkg`
 - Add Otter cache in `pkg`
+- Add `remove_rpc.sh` script to remove RPC services
 
 The purpose of the template is to show:
 
@@ -59,6 +60,16 @@ This template implements three types of servers:
 - [Project structure](#project-structure)
 - [Dependency Injection](#dependency-injection)
 - [Clean Architecture](#clean-architecture)
+
+## Clean Up (Gin REST API only)
+
+If you only need a simple REST API and want to remove gRPC, NATS, and RabbitMQ from the project, you can run the provided cleanup script:
+
+```sh
+./remove_rpc.sh
+```
+
+This will automatically strip out all RPC-related code, dependencies, docker configurations, and tests, leaving you with a clean Gin REST API template.
 
 ## Quick start
 

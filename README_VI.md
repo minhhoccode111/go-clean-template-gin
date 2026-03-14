@@ -60,6 +60,16 @@ Mẫu thiết kế này triển khai ba loại máy chủ:
 - [Tiêm phụ thuộc (Dependency Injection)](#tiêm-phụ-thuộc-dependency-injection)
 - [Kiến trúc Sạch (Clean Architecture)](#kiến-trúc-sạch-clean-architecture)
 
+## Dọn dẹp mẫu (Chỉ dành cho Gin REST API)
+
+Nếu bạn chỉ cần một REST API đơn giản và muốn loại bỏ gRPC, NATS, và RabbitMQ ra khỏi dự án, bạn có thể chạy tập lệnh dọn dẹp được cung cấp sẵn:
+
+```sh
+./remove_rpc.sh
+```
+
+Tập lệnh này sẽ tự động loại bỏ toàn bộ mã nguồn, các phụ thuộc, cấu hình docker và các bài kiểm tra liên quan đến RPC, mang lại cho bạn một mẫu Gin REST API hoàn toàn tinh gọn.
+
 ## Bắt đầu nhanh
 
 ### Phát triển cục bộ (Local development)
