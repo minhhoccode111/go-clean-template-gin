@@ -23,6 +23,14 @@ sed -i '/^# gRPC/,+1d' .env.example
 sed -i '/^# NATS/,+2d' .env.example
 sed -i '/^# RMQ/,+3d' .env.example
 
+# 3.1. Patch config/config.go - remove RPC-related structs
+sed -i '/GRPC.*GRPC/d' config/config.go
+sed -i '/RMQ.*RMQ/d' config/config.go
+sed -i '/NATS.*NATS/d' config/config.go
+sed -i '/\/\/ GRPC -/,+3d' config/config.go
+sed -i '/\/\/ RMQ -/,+5d' config/config.go
+sed -i '/\/\/ NATS -/,+4d' config/config.go
+
 # 4. Patch internal/app/app.go
 sed -i '/\/\/ RabbitMQ RPC Server/,+6d' internal/app/app.go
 sed -i '/\/\/ NATS RPC Server/,+6d' internal/app/app.go
@@ -46,6 +54,10 @@ sed -i '/natsrpc/d' internal/app/app.go
 sed -i '/pkg\/grpcserver/d' internal/app/app.go
 sed -i '/pkg\/nats\/nats_rpc\/server/d' internal/app/app.go
 sed -i '/pkg\/rabbitmq\/rmq_rpc\/server/d' internal/app/app.go
+
+sed -i '/cfg\.RMQ\./d' internal/app/app.go
+sed -i '/cfg\.NATS\./d' internal/app/app.go
+sed -i '/cfg\.GRPC\./d' internal/app/app.go
 
 # 5. Patch docker-compose.yml
 sed -i '/^  rabbitmq:/,/^[ \t]*-[ \t]*rabbitmq\.lvh\.me/d' docker-compose.yml
