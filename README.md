@@ -2,10 +2,6 @@
 
 # Go Clean template
 
-[🇨🇳 中文](README_CN.md)
-[🇷🇺 RU](README_RU.md)
-[🇻🇳 VI](README_VI.md)
-
 Clean Architecture template for Golang services
 
 [![Release](https://img.shields.io/github/v/release/minhhoccode111/go-clean-template-gin.svg)](https://github.com/minhhoccode111/go-clean-template-gin/releases/)
@@ -32,7 +28,7 @@ This is a fork of [go-clean-template](https://github.com/evrone/go-clean-templat
 - Replace Squirrel with Sqlc
 - Add validatorx wrapper in `pkg`
 - Add Otter cache in `pkg`
-- Add `remove_rpc.sh` script to remove RPC services
+- Add `simplify.sh` script to remove RPC services
 
 The purpose of the template is to show:
 
@@ -66,7 +62,7 @@ This template implements three types of servers:
 If you only need a simple REST API and want to remove gRPC, NATS, and RabbitMQ from the project, you can run the provided cleanup script:
 
 ```sh
-./remove_rpc.sh
+./simplify.sh
 ```
 
 This will automatically strip out all RPC-related code, dependencies, docker configurations, and tests, leaving you with a clean Gin REST API template.

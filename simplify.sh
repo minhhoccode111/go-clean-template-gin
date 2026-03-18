@@ -11,8 +11,19 @@ rm -rf internal/controller/amqp_rpc
 rm -rf pkg/grpcserver
 rm -rf pkg/nats
 rm -rf pkg/rabbitmq
+rm -rf integration-test
 
-# 2. Patch internal/app/app.go
+# 2. Delete integration test files, other language READMEs, dependabot
+rm -f docker-compose-integration-test.yml
+rm -f README_RU.md README_VI.md README_CN.md
+rm -f .github/dependabot.yml
+
+# 3. Patch .env.example
+sed -i '/^# gRPC/,+1d' .env.example
+sed -i '/^# NATS/,+2d' .env.example
+sed -i '/^# RMQ/,+3d' .env.example
+
+# 4. Patch internal/app/app.go
 sed -i '/\/\/ RabbitMQ RPC Server/,+6d' internal/app/app.go
 sed -i '/\/\/ NATS RPC Server/,+6d' internal/app/app.go
 sed -i '/\/\/ gRPC Server/,+2d' internal/app/app.go
@@ -36,27 +47,7 @@ sed -i '/pkg\/grpcserver/d' internal/app/app.go
 sed -i '/pkg\/nats\/nats_rpc\/server/d' internal/app/app.go
 sed -i '/pkg\/rabbitmq\/rmq_rpc\/server/d' internal/app/app.go
 
-# 3. Patch integration-test/integration_test.go
-# Remove test implementations sequentially located at the end of the file FIRST
-sed -i '/^\/\/ gRPC Client V1: GetHistory./,$d' integration-test/integration_test.go
-
-sed -i '/docs\/proto\/v1/d' integration-test/integration_test.go
-sed -i '/pkg\/nats\/nats_rpc\/client/d' integration-test/integration_test.go
-sed -i '/pkg\/rabbitmq\/rmq_rpc\/client/d' integration-test/integration_test.go
-sed -i '/google.golang.org\/grpc/d' integration-test/integration_test.go
-
-sed -i '/^[ \t]*\/\/ gRPC/,+1d' integration-test/integration_test.go
-sed -i '/^[ \t]*\/\/ RPC configs/,+2d' integration-test/integration_test.go
-sed -i '/^[ \t]*\/\/ RabbitMQ RPC/d' integration-test/integration_test.go
-sed -i '/rmqURL =/d' integration-test/integration_test.go
-sed -i '/natsURL =/d' integration-test/integration_test.go
-
-# Remove unused variables from the tests to fix go lints
-sed -i '/^[ \t]*requests.*10/d' integration-test/integration_test.go
-sed -i '/^[ \t]*expectedOriginal.*текст/d' integration-test/integration_test.go
-sed -i '/^[ \t]*\/\/ Test data/d' integration-test/integration_test.go
-
-# 4. Patch docker-compose.yml
+# 5. Patch docker-compose.yml
 sed -i '/^  rabbitmq:/,/^[ \t]*-[ \t]*rabbitmq\.lvh\.me/d' docker-compose.yml
 sed -i '/^  nats:/,/^[ \t]*-[ \t]*nats\.lvh\.me/d' docker-compose.yml
 
@@ -72,12 +63,16 @@ sed -i '/- "8081:8081"/d' docker-compose.yml
 sed -i '/rabbitmq_data:/d' docker-compose.yml
 sed -i '/nats_data:/d' docker-compose.yml
 
-# 5. Patch Makefile
+# 7. Patch Makefile
 sed -i '/proto-v1:/,+6d' Makefile
 sed -i 's/ rabbitmq nats//g' Makefile
 sed -i 's/ proto-v1//g' Makefile
+sed -i '/INTEGRATION_TEST_STACK/d' Makefile
+sed -i '/ALL_STACK/d' Makefile
+sed -i '/compose-up-integration-test:/,+2d' Makefile
+sed -i '/integration-test:/,+2d' Makefile
 
-# 6. Patch nginx/nginx.conf removing upstreams and servers
+# 7. Patch nginx/nginx.conf removing upstreams and servers
 awk '
 BEGIN { skip = 0; buffer = ""; in_server = 0; depth = 0 }
 /^[ \t]*server[ \t]*$/ {
@@ -112,7 +107,7 @@ skip {
 { print }
 ' nginx/nginx.conf >nginx/nginx.conf.tmp && mv nginx/nginx.conf.tmp nginx/nginx.conf
 
-# 7. Patch go.mod and cleanup
+# 8. Patch go.mod and cleanup
 sed -i '/google.golang.org\/grpc\/cmd\/protoc-gen-go-grpc/d' go.mod
 sed -i '/google.golang.org\/protobuf\/cmd\/protoc-gen-go/d' go.mod
 go mod tidy
