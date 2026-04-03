@@ -19,6 +19,14 @@ ALL_STACK = $(INTEGRATION_TEST_STACK)
 help: ## Display this help screen
 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
 
+db-up: ### Start database
+	$(BASE_STACK) up -d db
+.PHONY: db-up
+
+db-down: ### Stop database
+	$(BASE_STACK) stop db
+.PHONY: db-down
+
 compose-up: ### Run docker compose (without backend and reverse proxy)
 	$(BASE_STACK) up --build -d db rabbitmq nats && docker compose logs -f
 .PHONY: compose-up
@@ -26,6 +34,10 @@ compose-up: ### Run docker compose (without backend and reverse proxy)
 compose-up-all: ### Run docker compose (with backend and reverse proxy)
 	$(BASE_STACK) up --build -d
 .PHONY: compose-up-all
+
+compose-down-all: ### Stop docker compose (with backend and reverse proxy)
+	$(BASE_STACK) down
+.PHONY: compose-down-all
 
 compose-up-integration-test: ### Run docker compose with integration test
 	$(INTEGRATION_TEST_STACK) up --build --abort-on-container-exit --exit-code-from integration-test
@@ -116,7 +128,15 @@ migrate-up: ### migration up
 	migrate -path migrations -database '$(PG_URL)?sslmode=disable' up
 .PHONY: migrate-up
 
+migrate-up1: ### migration up
+	migrate -path migrations -database '$(PG_URL)?sslmode=disable' up
+.PHONY: migrate-up
+
 migrate-down: ### rollback last migration
+	migrate -path migrations -database '$(PG_URL)?sslmode=disable' down
+.PHONY: migrate-down
+
+migrate-down1: ### rollback last migration
 	migrate -path migrations -database '$(PG_URL)?sslmode=disable' down 1
 .PHONY: migrate-down
 
@@ -133,12 +153,25 @@ migrate-list: ### list migrations, order by modified date
 	ls -l migrations/*.up.sql
 .PHONY: migrate-list
 
+migrate-force: ### force migration at a specific version
+	migrate -path migrations -database '$(PG_URL)?sslmode=disable' force "$(version)"
+.PHONY: migrate-list
+
 bin-deps: ### install tools
 	go install tool
 	go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate
 	go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
 	go install github.com/air-verse/air@latest
+	pnpm install -g swagger-typescript-api
 .PHONY: bin-deps
 
-pre-commit: swag-v1 proto-v1 mock format linter-golangci test ### run pre-commit
+gen-ts:
+	# can change location, as well as axios/ky instead of native fetch
+	swagger-typescript-api generate \
+		--path docs/swagger.yaml \
+		--output ./ \
+		--name api.ts
+.PHONY: gen-ts
+
+pre-commit: swag-v1 proto-v1 mock format linter-golangci test gen-ts ### run pre-commit
 .PHONY: pre-commit
