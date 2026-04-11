@@ -11,10 +11,9 @@ rm -rf internal/controller/amqp_rpc
 rm -rf pkg/grpcserver
 rm -rf pkg/nats
 rm -rf pkg/rabbitmq
-rm -rf integration-test
 
-# 2. Delete integration test files, other language READMEs, dependabot
-rm -f docker-compose-integration-test.yml
+# 2. Delete other language READMEs, dependabot
+
 rm -f README_RU.md README_VI.md README_CN.md
 rm -f .github/dependabot.yml
 
@@ -79,12 +78,33 @@ sed -i '/nats_data:/d' docker-compose.yml
 sed -i '/proto-v1:/,+6d' Makefile
 sed -i 's/ rabbitmq nats//g' Makefile
 sed -i 's/ proto-v1//g' Makefile
-sed -i '/INTEGRATION_TEST_STACK/d' Makefile
-sed -i '/ALL_STACK/d' Makefile
-sed -i '/compose-up-integration-test:/,+2d' Makefile
-sed -i '/integration-test:/,+2d' Makefile
 
-# 7. Patch nginx/nginx.conf removing upstreams and servers
+# 7. Patch integration-test/integration_test.go - remove RPC imports, constants, and test functions
+INTTEST=integration-test/integration_test.go
+
+# Remove RPC-related imports
+sed -i '/protov1/d' "$INTTEST"
+sed -i '/natsClient/d' "$INTTEST"
+sed -i '/rmqClient/d' "$INTTEST"
+sed -i '/google.golang.org\/grpc/d' "$INTTEST"
+
+# Remove test functions FIRST (before constant comment patterns can clobber their comments)
+# Remove gRPC test function (TestClientGRPCV1)
+sed -i '/\/\/ gRPC Client V1: GetHistory\./,/^}/d' "$INTTEST"
+
+# Remove RabbitMQ RPC test function (TestClientRMQRPCV1)
+sed -i '/\/\/ RabbitMQ RPC Client V1: getHistory\./,/^}/d' "$INTTEST"
+
+# Remove NATS RPC test function (TestClientNATSRPCV1)
+sed -i '/\/\/ NATS RPC Client V1: getHistory\./,/^}/d' "$INTTEST"
+
+# Remove RPC-related constants (using $ anchor to avoid matching longer comments)
+sed -i '/\/\/ gRPC$/,+1d' "$INTTEST"
+sed -i '/\/\/ RPC configs/,+3d' "$INTTEST"
+sed -i '/\/\/ RabbitMQ RPC$/,+1d' "$INTTEST"
+sed -i '/\/\/ Test data/,+1d' "$INTTEST"
+
+# 8. Patch nginx/nginx.conf removing upstreams and servers
 awk '
 BEGIN { skip = 0; buffer = ""; in_server = 0; depth = 0 }
 /^[ \t]*server[ \t]*$/ {
