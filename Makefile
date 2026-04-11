@@ -173,5 +173,9 @@ gen-ts:
 		--name api.ts
 .PHONY: gen-ts
 
-pre-commit: swag-v1 proto-v1 mock format linter-golangci test gen-ts ### run pre-commit
+schema: ### Generate database schema
+	docker exec db pg_dump --schema-only --no-owner --no-privileges $(PG_URL) > docs/schema.sql
+.PHONY: schema
+
+pre-commit: swag-v1 proto-v1 mock format linter-golangci test gen-ts schema ### run pre-commit
 .PHONY: pre-commit

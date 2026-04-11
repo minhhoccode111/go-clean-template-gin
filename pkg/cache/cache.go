@@ -86,3 +86,8 @@ func (c *Cache[K, V]) SetWithTTL(key K, value V, ttl time.Duration) bool {
 
 	return ok
 }
+
+// InvalidateAll removes all entries from the cache.
+func (c *Cache[K, V]) InvalidateAll() {
+	c.c.InvalidateAll()
+}
