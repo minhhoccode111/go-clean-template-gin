@@ -31,10 +31,11 @@ func (uc *UseCase) History(ctx context.Context) (entity.TranslationHistory, erro
 		return entity.TranslationHistory{History: cached}, nil
 	}
 
-	translations, err := uc.repo.GetHistory(ctx)
+	// Demonstration mode: read via sqlc.
+	translations, err := uc.repo.GetHistoryWithSqlc(ctx)
 	if err != nil {
 		return entity.TranslationHistory{}, fmt.Errorf(
-			"TranslationUseCase - History - s.repo.GetHistory: %w",
+			"TranslationUseCase - History - s.repo.GetHistoryWithSqlc: %w",
 			err,
 		)
 	}
@@ -57,10 +58,11 @@ func (uc *UseCase) Translate(
 		)
 	}
 
-	err = uc.repo.Store(ctx, translation)
+	// Demonstration mode: write via ent.
+	err = uc.repo.StoreWithEnt(ctx, translation)
 	if err != nil {
 		return entity.Translation{}, fmt.Errorf(
-			"TranslationUseCase - Translate - s.repo.Store: %w",
+			"TranslationUseCase - Translate - s.repo.StoreWithEnt: %w",
 			err,
 		)
 	}

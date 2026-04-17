@@ -98,6 +98,29 @@ make compose-up-integration-test
 make compose-up-all
 ```
 
+### Add a migration
+
+```bash
+# 1. Modify Ent schemas
+# Edit or create an Ent schema in internal/repo/persistent/ent/schema/
+
+# 2. Generate the migration
+make migrate-create name="add_new_field"
+# This reads your Ent schema and generates .up.sql and .down.sql files in the migrations/ directory using Atlas.
+
+# 3. Review the migration files
+# Check the generated files in migrations/ to ensure they look correct.
+
+# 4. Apply the migration
+make migrate-up
+# This applies all pending migrations to your database.
+
+# 5. Regenerate code
+# After migration, regenerate Ent and sqlc:
+make ent
+make sqlc
+```
+
 Check services:
 
 - AMQP RPC:

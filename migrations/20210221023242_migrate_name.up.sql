@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS history(
+CREATE TABLE IF NOT EXISTS histories(
     id serial PRIMARY KEY,
     source VARCHAR(255) NOT NULL,
     destination VARCHAR(255) NOT NULL,

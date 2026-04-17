@@ -45,7 +45,7 @@ func TestHistory(t *testing.T) { //nolint:tparallel // data races here
 			name: "cache miss - empty result from db",
 			mock: func() {
 				cache.EXPECT().GetHistory(context.Background()).Return(nil, false)
-				repo.EXPECT().GetHistory(context.Background()).Return(nil, nil)
+				repo.EXPECT().GetHistoryWithSqlc(context.Background()).Return(nil, nil)
 				cache.EXPECT().SetHistory(context.Background(), []entity.Translation(nil)).Return(true)
 			},
 			res: entity.TranslationHistory{},
@@ -64,7 +64,7 @@ func TestHistory(t *testing.T) { //nolint:tparallel // data races here
 			name: "cache miss - repo error",
 			mock: func() {
 				cache.EXPECT().GetHistory(context.Background()).Return(nil, false)
-				repo.EXPECT().GetHistory(context.Background()).Return(nil, errInternalServErr)
+				repo.EXPECT().GetHistoryWithSqlc(context.Background()).Return(nil, errInternalServErr)
 			},
 			res: entity.TranslationHistory{},
 			err: errInternalServErr,
@@ -95,7 +95,7 @@ func TestTranslate(t *testing.T) { //nolint:tparallel // data races here
 			name: "success - cache invalidated",
 			mock: func() {
 				webAPI.EXPECT().Translate(entity.Translation{}).Return(entity.Translation{}, nil)
-				repo.EXPECT().Store(context.Background(), entity.Translation{}).Return(nil)
+				repo.EXPECT().StoreWithEnt(context.Background(), entity.Translation{}).Return(nil)
 				cache.EXPECT().InvalidateHistory(context.Background())
 			},
 			res: entity.Translation{},
@@ -113,7 +113,7 @@ func TestTranslate(t *testing.T) { //nolint:tparallel // data races here
 			name: "repo error",
 			mock: func() {
 				webAPI.EXPECT().Translate(entity.Translation{}).Return(entity.Translation{}, nil)
-				repo.EXPECT().Store(context.Background(), entity.Translation{}).Return(errInternalServErr)
+				repo.EXPECT().StoreWithEnt(context.Background(), entity.Translation{}).Return(errInternalServErr)
 			},
 			res: entity.Translation{},
 			err: errInternalServErr,

@@ -12,8 +12,10 @@ import (
 type (
 	// TranslationRepo -.
 	TranslationRepo interface {
-		Store(context.Context, entity.Translation) error
-		GetHistory(context.Context) ([]entity.Translation, error)
+		StoreWithEnt(context.Context, entity.Translation) error
+		StoreWithSqlc(context.Context, entity.Translation) error
+		GetHistoryWithEnt(context.Context) ([]entity.Translation, error)
+		GetHistoryWithSqlc(context.Context) ([]entity.Translation, error)
 	}
 
 	// TranslationWebAPI -.

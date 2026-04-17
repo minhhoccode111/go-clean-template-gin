@@ -41,33 +41,62 @@ func (m *MockTranslationRepo) EXPECT() *MockTranslationRepoMockRecorder {
 	return m.recorder
 }
 
-// GetHistory mocks base method.
-func (m *MockTranslationRepo) GetHistory(arg0 context.Context) ([]entity.Translation, error) {
+// GetHistoryWithEnt mocks base method.
+func (m *MockTranslationRepo) GetHistoryWithEnt(arg0 context.Context) ([]entity.Translation, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetHistory", arg0)
+	ret := m.ctrl.Call(m, "GetHistoryWithEnt", arg0)
 	ret0, _ := ret[0].([]entity.Translation)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetHistory indicates an expected call of GetHistory.
-func (mr *MockTranslationRepoMockRecorder) GetHistory(arg0 any) *gomock.Call {
+// GetHistoryWithEnt indicates an expected call of GetHistoryWithEnt.
+func (mr *MockTranslationRepoMockRecorder) GetHistoryWithEnt(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetHistory", reflect.TypeOf((*MockTranslationRepo)(nil).GetHistory), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetHistoryWithEnt", reflect.TypeOf((*MockTranslationRepo)(nil).GetHistoryWithEnt), arg0)
 }
 
-// Store mocks base method.
-func (m *MockTranslationRepo) Store(arg0 context.Context, arg1 entity.Translation) error {
+// GetHistoryWithSqlc mocks base method.
+func (m *MockTranslationRepo) GetHistoryWithSqlc(arg0 context.Context) ([]entity.Translation, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Store", arg0, arg1)
+	ret := m.ctrl.Call(m, "GetHistoryWithSqlc", arg0)
+	ret0, _ := ret[0].([]entity.Translation)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetHistoryWithSqlc indicates an expected call of GetHistoryWithSqlc.
+func (mr *MockTranslationRepoMockRecorder) GetHistoryWithSqlc(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetHistoryWithSqlc", reflect.TypeOf((*MockTranslationRepo)(nil).GetHistoryWithSqlc), arg0)
+}
+
+// StoreWithEnt mocks base method.
+func (m *MockTranslationRepo) StoreWithEnt(arg0 context.Context, arg1 entity.Translation) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "StoreWithEnt", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// Store indicates an expected call of Store.
-func (mr *MockTranslationRepoMockRecorder) Store(arg0, arg1 any) *gomock.Call {
+// StoreWithEnt indicates an expected call of StoreWithEnt.
+func (mr *MockTranslationRepoMockRecorder) StoreWithEnt(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Store", reflect.TypeOf((*MockTranslationRepo)(nil).Store), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StoreWithEnt", reflect.TypeOf((*MockTranslationRepo)(nil).StoreWithEnt), arg0, arg1)
+}
+
+// StoreWithSqlc mocks base method.
+func (m *MockTranslationRepo) StoreWithSqlc(arg0 context.Context, arg1 entity.Translation) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "StoreWithSqlc", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// StoreWithSqlc indicates an expected call of StoreWithSqlc.
+func (mr *MockTranslationRepoMockRecorder) StoreWithSqlc(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StoreWithSqlc", reflect.TypeOf((*MockTranslationRepo)(nil).StoreWithSqlc), arg0, arg1)
 }
 
 // MockTranslationWebAPI is a mock of TranslationWebAPI interface.
