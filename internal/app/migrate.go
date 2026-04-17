@@ -3,15 +3,10 @@
 package app
 
 import (
-	"errors"
 	"log"
 	"os"
+	"os/exec"
 	"time"
-
-	"github.com/golang-migrate/migrate/v4"
-	// migrate tools
-	_ "github.com/golang-migrate/migrate/v4/database/postgres"
-	_ "github.com/golang-migrate/migrate/v4/source/file"
 )
 
 const (
@@ -27,37 +22,38 @@ func init() {
 
 	databaseURL += "?sslmode=disable"
 
-	var (
-		attempts = _defaultAttempts
-		err      error
-		m        *migrate.Migrate
-	)
+	attempts := _defaultAttempts
+	var err error
+
+	atlasBin := "atlas"
+	if _, lookErr := exec.LookPath(atlasBin); lookErr != nil {
+		atlasBin = "/atlas"
+	}
 
 	for attempts > 0 {
-		m, err = migrate.New("file://migrations", databaseURL)
+		cmd := exec.Command( //nolint:gosec // arguments are constants/environment values
+			atlasBin,
+			"migrate",
+			"apply",
+			"--url",
+			databaseURL,
+			"--dir",
+			"file://migrations",
+		)
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		err = cmd.Run()
 		if err == nil {
-			break
+			log.Printf("Migrate: apply success")
+			return
 		}
 
-		log.Printf("Migrate: postgres is trying to connect, attempts left: %d", attempts)
+		log.Printf("Migrate: atlas apply failed, attempts left: %d", attempts)
 		time.Sleep(_defaultTimeout)
 		attempts--
 	}
 
 	if err != nil {
-		log.Fatalf("Migrate: postgres connect error: %s", err)
+		log.Fatalf("Migrate: atlas apply error: %s", err)
 	}
-
-	err = m.Up()
-	defer m.Close()
-	if err != nil && !errors.Is(err, migrate.ErrNoChange) {
-		log.Fatalf("Migrate: up error: %s", err)
-	}
-
-	if errors.Is(err, migrate.ErrNoChange) {
-		log.Printf("Migrate: no change")
-		return
-	}
-
-	log.Printf("Migrate: up success")
 }
