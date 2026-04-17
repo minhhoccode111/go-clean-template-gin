@@ -3,13 +3,15 @@
 package app
 
 import (
-	"context"
+	"errors"
 	"log"
 	"os"
 	"time"
 
-	_ "github.com/jackc/pgx/v5/stdlib"
-	"github.com/minhhoccode111/go-clean-template-gin/internal/repo/persistent/ent"
+	"github.com/golang-migrate/migrate/v4"
+	// migrate tools
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 )
 
 const (
@@ -28,11 +30,11 @@ func init() {
 	var (
 		attempts = _defaultAttempts
 		err      error
-		client   *ent.Client
+		m        *migrate.Migrate
 	)
 
 	for attempts > 0 {
-		client, err = ent.Open("pgx", databaseURL)
+		m, err = migrate.New("file://migrations", databaseURL)
 		if err == nil {
 			break
 		}
@@ -46,17 +48,16 @@ func init() {
 		log.Fatalf("Migrate: postgres connect error: %s", err)
 	}
 
-	defer client.Close()
-
-	// Keep migrations additive by default; destructive changes must be explicit.
-	err = client.Schema.Create(
-		context.Background(),
-		ent.WithDropColumn(false),
-		ent.WithDropIndex(false),
-	)
-	if err != nil {
-		log.Fatalf("Migrate: schema create error: %s", err)
+	err = m.Up()
+	defer m.Close()
+	if err != nil && !errors.Is(err, migrate.ErrNoChange) {
+		log.Fatalf("Migrate: up error: %s", err)
 	}
 
-	log.Printf("Migrate: schema sync success")
+	if errors.Is(err, migrate.ErrNoChange) {
+		log.Printf("Migrate: no change")
+		return
+	}
+
+	log.Printf("Migrate: up success")
 }

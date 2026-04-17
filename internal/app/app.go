@@ -49,13 +49,8 @@ func Run(cfg *config.Config) { //nolint: gocyclo,cyclop,funlen,gocritic,nolintli
 	}
 
 	// Use-Case
-	translationRepo, err := persistent.New(pg)
-	if err != nil {
-		l.Fatal(fmt.Errorf("app - Run - persistent.New: %w", err))
-	}
-
 	translationUseCase := translation.New(
-		translationRepo,
+		persistent.New(pg),
 		webapi.New(),
 		repocache.New(otterCache),
 	)

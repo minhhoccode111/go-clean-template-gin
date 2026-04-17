@@ -8,12 +8,8 @@ sql:
         package: "sqlc"
         out: "internal/repo/persistent/sqlc"
         sql_package: "pgx/v5"
-        emit_empty_slices: true
         overrides:
-          - db_type: "timestamptz"
-            go_type: "time.Time"
-          - db_type: "text"
+          - db_type: "varchar"
             go_type: "string"
           - db_type: "text"
-            nullable: true
             go_type: "string"
