@@ -13,8 +13,9 @@ Clean Architecture template for Golang services
 [![API Documentation](https://img.shields.io/badge/Swagger-API%20Documentation-blue)](https://github.com/swaggo/swag)
 [![Validation](https://img.shields.io/badge/Validator-Data%20Integrity-blue)](https://github.com/go-playground/validator)
 [![JSON Handling](https://img.shields.io/badge/Go--JSON-Fast%20Serialization-blue)](https://github.com/goccy/go-json)
-[![Query Builder](https://img.shields.io/badge/sqlc-SQL%20Compiler-blue)](https://sqlc.dev/)
-[![Database Migrations](https://img.shields.io/badge/Migrations-Seamless%20Schema%20Updates-blue)](https://github.com/golang-migrate/migrate)
+[![ORM](https://img.shields.io/badge/Ent-Schema%20Driven%20CRUD-blue)](https://entgo.io/)
+[![Query Builder](https://img.shields.io/badge/sqlc-Advanced%20SQL%20Queries-blue)](https://sqlc.dev/)
+[![Database Migrations](https://img.shields.io/badge/Migrations-Ent%20Schema%20Sync-blue)](https://entgo.io/docs/migrate)
 [![Logging](https://img.shields.io/badge/ZeroLog-Structured%20Logging-blue)](https://github.com/rs/zerolog)
 [![Metrics](https://img.shields.io/badge/Prometheus-Metrics%20Integration-blue)](https://github.com/zsais/go-gin-prometheus)
 [![Testing](https://img.shields.io/badge/Testify-Testing%20Framework-blue)](https://github.com/stretchr/testify)
@@ -25,7 +26,7 @@ Clean Architecture template for Golang services
 This is a fork of [go-clean-template](https://github.com/evrone/go-clean-template) but:
 
 - Replace Fiber with Gin
-- Replace Squirrel with Sqlc
+- Replace Squirrel with Ent (CRUD) + Sqlc (analytical queries)
 - Add validatorx wrapper in `pkg`
 - Add Otter cache in `pkg`
 - Add `simplify.sh` script to remove RPC services
@@ -169,7 +170,7 @@ If `app.go` starts to grow, you can split it into multiple files.
 
 For a large number of injections, [wire](https://github.com/google/wire) can be used.
 
-The `migrate.go` file is used for database auto migrations.
+The `migrate.go` file applies schema changes from Ent schema code.
 It is included if an argument with the _migrate_ tag is specified.
 For example:
 
@@ -430,7 +431,9 @@ Or more complex business logic:
 ### Clean Architecture Terminology
 
 - **Entities** (`internal/entity`) are the core business objects. They are used throughout the entire application (Use Cases, Controllers, etc.) and are agnostic of storage or transport.
-- **Database Models** (`internal/repo/persistent/sqlc`) are generated code that represents the database schema. They are private to the repository layer.
+- **Database Models** are generated code private to the repository layer:
+  - Ent models (`internal/repo/persistent/ent`) are used for CRUD and schema evolution.
+  - Sqlc models (`internal/repo/persistent/sqlc`) are used for advanced SQL queries.
 - **Mapping:** The repository layer is responsible for converting ("mapping") database models to business entities. This ensures that a change in the database schema does not force a change in the business logic.
 
 - **Use Cases** is business logic located in `internal/usecase`.

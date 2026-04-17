@@ -26,7 +26,7 @@ func (q *Queries) GetHistory(ctx context.Context) ([]GetHistoryRow, error) {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []GetHistoryRow
+	items := []GetHistoryRow{}
 	for rows.Next() {
 		var i GetHistoryRow
 		if err := rows.Scan(
