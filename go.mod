@@ -21,7 +21,7 @@ require (
 	github.com/go-playground/validator/v10 v10.30.2
 	github.com/goccy/go-json v0.10.6
 	github.com/google/uuid v1.6.0
-	github.com/jackc/pgx/v5 v5.9.1
+	github.com/jackc/pgx/v5 v5.9.2
 	github.com/maypok86/otter/v2 v2.3.0
 	github.com/nats-io/nats.go v1.51.0
 	github.com/rabbitmq/amqp091-go v1.10.0
