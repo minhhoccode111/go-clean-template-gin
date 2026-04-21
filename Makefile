@@ -151,8 +151,6 @@ migrate-list: ### list migrations, order by modified date
 
 bin-deps: ### install tools
 	go install tool
-	go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
-	go install entgo.io/ent/cmd/ent@latest
 	go install github.com/air-verse/air@latest
 	curl -sSf https://atlasgo.sh | sh
 	pnpm install -g swagger-typescript-api

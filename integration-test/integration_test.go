@@ -81,15 +81,15 @@ func getHealthCheck(url string) (int, error) {
 func healthCheck(attempts int) error {
 	for attempts > 0 {
 		statusCode, err := getHealthCheck(healthPath)
-		if err != nil {
-			return err
-		}
-
-		if statusCode == http.StatusOK {
+		if err == nil && statusCode == http.StatusOK {
 			return nil
 		}
 
-		log.Printf("Integration tests: url %s is not available, attempts left: %d", healthPath, attempts)
+		if err != nil {
+			log.Printf("Integration tests: url %s is not available (%s), attempts left: %d", healthPath, err, attempts)
+		} else {
+			log.Printf("Integration tests: url %s is not available (status %d), attempts left: %d", healthPath, statusCode, attempts)
+		}
 
 		time.Sleep(time.Second)
 
