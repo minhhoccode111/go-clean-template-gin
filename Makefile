@@ -129,7 +129,7 @@ migrate-up: ### migration up
 .PHONY: migrate-up
 
 migrate-up1: ### migration up
-	migrate -path migrations -database '$(PG_URL)?sslmode=disable' up
+	migrate -path migrations -database '$(PG_URL)?sslmode=disable' up 1
 .PHONY: migrate-up
 
 migrate-down: ### rollback last migration
@@ -145,23 +145,27 @@ migrate-redo: ### rollback and reapply last migration
 	migrate -path migrations -database '$(PG_URL)?sslmode=disable' up 1
 .PHONY: migrate-redo
 
-migrate-status: ### show migration version
-	migrate -path migrations -database '$(PG_URL)?sslmode=disable' version
+migrate-status: ### show migration version, name, and list all migrations
+	@version=$$(migrate -path migrations -database '$(PG_URL)?sslmode=disable' version 2>&1) && \
+	file=$$(ls migrations/$${version}_*.up.sql 2>/dev/null) && \
+	echo "version: $${version}" && \
+	echo "name:    $$(basename $${file} .up.sql)" && \
+	echo "" && \
+	echo "all migrations:" && \
+	ls migrations/*.up.sql | xargs -n1 basename
 .PHONY: migrate-status
-
-migrate-list: ### list migrations, order by modified date
-	ls -l migrations/*.up.sql
-.PHONY: migrate-list
 
 migrate-force: ### force migration at a specific version
 	migrate -path migrations -database '$(PG_URL)?sslmode=disable' force "$(version)"
-.PHONY: migrate-list
+.PHONY: migrate-force
+
+schema: ### Generate database schema
+	atlas schema inspect -u "$(PG_URL)?sslmode=disable" --format '{{ sql . }}' > docs/schema.sql
+.PHONY: schema
 
 bin-deps: ### install tools
 	go install tool
-	go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate
-	go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
-	go install github.com/air-verse/air@latest
+	go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
 	pnpm install -g swagger-typescript-api
 .PHONY: bin-deps
 
@@ -173,9 +177,5 @@ gen-ts:
 		--name api.ts
 .PHONY: gen-ts
 
-schema: ### Generate database schema
-	docker exec db pg_dump --schema-only --no-owner --no-privileges $(PG_URL) > docs/schema.sql
-.PHONY: schema
-
-pre-commit: swag-v1 proto-v1 mock format linter-golangci test gen-ts schema ### run pre-commit
+pre-commit: swag-v1 proto-v1 mock format schema gen-ts test linter-golangci ### run pre-commit
 .PHONY: pre-commit
