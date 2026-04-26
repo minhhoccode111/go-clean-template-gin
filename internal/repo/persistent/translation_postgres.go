@@ -35,11 +35,11 @@ func New(pg *postgres.Postgres) *TranslationRepo {
 	}
 }
 
-// GetHistoryWithEnt demonstrates CRUD-style reads with ent.
-func (r *TranslationRepo) GetHistoryWithEnt(ctx context.Context) ([]entity.Translation, error) {
+// GetHistory -.
+func (r *TranslationRepo) GetHistory(ctx context.Context) ([]entity.Translation, error) {
 	rows, err := r.ent.History.Query().All(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("TranslationRepo - GetHistoryWithEnt - r.ent.History.Query: %w", err)
+		return nil, fmt.Errorf("TranslationRepo - GetHistory - r.ent.History.Query: %w", err)
 	}
 
 	entities := make([]entity.Translation, 0, len(rows))
@@ -56,32 +56,12 @@ func (r *TranslationRepo) GetHistoryWithEnt(ctx context.Context) ([]entity.Trans
 	return entities, nil
 }
 
-// GetHistoryWithSqlc demonstrates query-style reads with sqlc.
-func (r *TranslationRepo) GetHistoryWithSqlc(ctx context.Context) ([]entity.Translation, error) {
-	rows, err := r.sqlc.GetHistory(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("TranslationRepo - GetHistoryWithSqlc - r.sqlc.GetHistory: %w", err)
-	}
-
-	entities := make([]entity.Translation, 0, len(rows))
-
-	for _, row := range rows {
-		entities = append(entities, entity.Translation{
-			Source:      row.Source,
-			Destination: row.Destination,
-			Original:    row.Original,
-			Translation: row.Translation,
-		})
-	}
-
-	return entities, nil
-}
-
-// StoreWithEnt demonstrates transactional writes with ent.
-func (r *TranslationRepo) StoreWithEnt(ctx context.Context, t entity.Translation) error {
+// Store -.
+// An example of a transactional store with ent.
+func (r *TranslationRepo) Store(ctx context.Context, t entity.Translation) error {
 	tx, err := r.ent.Tx(ctx)
 	if err != nil {
-		return fmt.Errorf("TranslationRepo - StoreWithEnt - r.ent.Tx: %w", err)
+		return fmt.Errorf("TranslationRepo - Store - r.ent.Tx: %w", err)
 	}
 
 	defer tx.Rollback() //nolint:errcheck // standard practice to ignore this
@@ -93,37 +73,11 @@ func (r *TranslationRepo) StoreWithEnt(ctx context.Context, t entity.Translation
 		SetTranslation(t.Translation).
 		Save(ctx)
 	if err != nil {
-		return fmt.Errorf("TranslationRepo - StoreWithEnt - tx.History.Create: %w", err)
+		return fmt.Errorf("TranslationRepo - Store - tx.History.Create: %w", err)
 	}
 
 	if err := tx.Commit(); err != nil {
-		return fmt.Errorf("TranslationRepo - StoreWithEnt - tx.Commit: %w", err)
-	}
-
-	return nil
-}
-
-// StoreWithSqlc demonstrates transactional writes with sqlc.
-func (r *TranslationRepo) StoreWithSqlc(ctx context.Context, t entity.Translation) error {
-	tx, err := r.Pool.Begin(ctx)
-	if err != nil {
-		return fmt.Errorf("TranslationRepo - StoreWithSqlc - r.Pool.Begin: %w", err)
-	}
-
-	defer tx.Rollback(ctx) //nolint:errcheck // standard practice to ignore this
-
-	queriesTx := r.sqlc.WithTx(tx)
-	if err = queriesTx.Store(ctx, sqlc.StoreParams{
-		Source:      t.Source,
-		Destination: t.Destination,
-		Original:    t.Original,
-		Translation: t.Translation,
-	}); err != nil {
-		return fmt.Errorf("TranslationRepo - StoreWithSqlc - queriesTx.Store: %w", err)
-	}
-
-	if err = tx.Commit(ctx); err != nil {
-		return fmt.Errorf("TranslationRepo - StoreWithSqlc - tx.Commit: %w", err)
+		return fmt.Errorf("TranslationRepo - Store - tx.Commit: %w", err)
 	}
 
 	return nil
