@@ -11,9 +11,6 @@ BASE_STACK = docker compose -f docker-compose.yml
 INTEGRATION_TEST_STACK = $(BASE_STACK) -f docker-compose-integration-test.yml
 ALL_STACK = $(INTEGRATION_TEST_STACK)
 
-# For atlas migration
-DEV_URL := docker://postgres/16/dev?search_path=public
-
 # HELP =================================================================================================================
 # This will output the help for each task
 # thanks to https://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
@@ -127,34 +124,30 @@ mock: ### run mockgen
 	mockgen -source ./internal/usecase/contracts.go -package usecase_test > ./internal/usecase/mocks_usecase_test.go
 .PHONY: mock
 
-migrate-create: ### create new migration with name="$(name)" from ent schema
-	atlas migrate diff "$(name)" --dir "file://migrations" --to "ent://internal/repo/persistent/ent/schema" --dev-url "$(DEV_URL)"
+migrate-create:  ### create new migration with name="$(name)" from ent schema
+	atlas migrate diff "$(name)" --dir "file://migrations" --to "ent://internal/repo/persistent/ent/schema" --dev-url "docker://postgres/16/dev?search_path=public"
 .PHONY: migrate-create
 
 migrate-up: ### apply all pending migrations
 	atlas migrate apply --url '$(PG_URL)?sslmode=disable' --dir "file://migrations"
 .PHONY: migrate-up
 
-migrate-up1: ### apply 1 pending migration
-	atlas migrate apply 1 --url '$(PG_URL)?sslmode=disable' --dir "file://migrations"
-.PHONY: migrate-up1
-
-migrate-down: ### rollback all migrations
-	atlas migrate down 9999 --url '$(PG_URL)?sslmode=disable' --dir "file://migrations" --dev-url "$(DEV_URL)" --skip-checks
+migrate-down: ### rollback last migration
+	atlas migrate down --url '$(PG_URL)?sslmode=disable' --dir "file://migrations" --amount 1
 .PHONY: migrate-down
 
-migrate-down1: ### rollback last migration
-	atlas migrate down 1 --url '$(PG_URL)?sslmode=disable' --dir "file://migrations" --dev-url "$(DEV_URL)" --skip-checks
-.PHONY: migrate-down1
-
 migrate-redo: ### rollback and reapply last migration
-	atlas migrate down 1 --url '$(PG_URL)?sslmode=disable' --dir "file://migrations" --dev-url "$(DEV_URL)" --skip-checks
-	atlas migrate apply 1 --url '$(PG_URL)?sslmode=disable' --dir "file://migrations"
+	atlas migrate down --url '$(PG_URL)?sslmode=disable' --dir "file://migrations" --amount 1
+	atlas migrate apply --url '$(PG_URL)?sslmode=disable' --dir "file://migrations"
 .PHONY: migrate-redo
 
-migrate-status: ### show migration status
+migrate-status: ### show migration version
 	atlas migrate status --url '$(PG_URL)?sslmode=disable' --dir "file://migrations"
 .PHONY: migrate-status
+
+migrate-list: ### list migrations, order by modified date
+	ls -l migrations/*.up.sql
+.PHONY: migrate-list
 
 bin-deps: ### install tools
 	go install tool
@@ -175,5 +168,5 @@ schema: ### Generate database schema
 	docker exec db pg_dump --schema-only --no-owner --no-privileges $(PG_URL) > docs/schema.sql
 .PHONY: schema
 
-pre-commit: swag-v1 proto-v1 sqlc ent schema mock format linter-golangci test gen-ts ### run pre-commit
+pre-commit: swag-v1 proto-v1 mock format linter-golangci test gen-ts schema ### run pre-commit
 .PHONY: pre-commit
