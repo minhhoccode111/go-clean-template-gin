@@ -79,7 +79,5 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - name: Clean up docker volumes
-        run: docker volume rm go-clean-template-gin_db_data go-clean-template-gin_rabbitmq_data go-clean-template-gin_nats_data 2>/dev/null || true
       - name: Integration tests
         run: "make compose-up-integration-test"
