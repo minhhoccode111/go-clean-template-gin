@@ -13,9 +13,8 @@ Clean Architecture template for Golang services
 [![API Documentation](https://img.shields.io/badge/Swagger-API%20Documentation-blue)](https://github.com/swaggo/swag)
 [![Validation](https://img.shields.io/badge/Validator-Data%20Integrity-blue)](https://github.com/go-playground/validator)
 [![JSON Handling](https://img.shields.io/badge/Go--JSON-Fast%20Serialization-blue)](https://github.com/goccy/go-json)
-[![ORM](https://img.shields.io/badge/entgo-Entity%20Framework-blue)](https://entgo.io/)
 [![Query Builder](https://img.shields.io/badge/sqlc-SQL%20Compiler-blue)](https://sqlc.dev/)
-[![Database Migrations](https://img.shields.io/badge/Atlas-Versioned%20Migrations-blue)](https://atlasgo.io/)
+[![Database Migrations](https://img.shields.io/badge/Migrations-Seamless%20Schema%20Updates-blue)](https://github.com/golang-migrate/migrate)
 [![Logging](https://img.shields.io/badge/ZeroLog-Structured%20Logging-blue)](https://github.com/rs/zerolog)
 [![Metrics](https://img.shields.io/badge/Prometheus-Metrics%20Integration-blue)](https://github.com/zsais/go-gin-prometheus)
 [![Testing](https://img.shields.io/badge/Testify-Testing%20Framework-blue)](https://github.com/stretchr/testify)
@@ -26,8 +25,7 @@ Clean Architecture template for Golang services
 This is a fork of [go-clean-template](https://github.com/evrone/go-clean-template) but:
 
 - Replace Fiber with Gin
-- Replace Squirrel with Sqlc and Ent
-- Replace golang-migrate with Atlas migrations
+- Replace Squirrel with Sqlc
 - Add validatorx wrapper in `pkg`
 - Add Otter cache in `pkg`
 - Add `simplify.sh` script to remove RPC services
@@ -76,8 +74,6 @@ This will automatically strip out all RPC-related code, dependencies, docker con
 ```sh
 # Postgres, RabbitMQ, NATS
 make compose-up
-# Apply Atlas migrations (from Ent schema diff files)
-make migrate-up
 # Run app with migrations
 make run
 # Or air
@@ -173,7 +169,7 @@ If `app.go` starts to grow, you can split it into multiple files.
 
 For a large number of injections, [wire](https://github.com/google/wire) can be used.
 
-The `migrate.go` file applies Atlas migrations at startup.
+The `migrate.go` file is used for database auto migrations.
 It is included if an argument with the _migrate_ tag is specified.
 For example:
 
@@ -291,7 +287,6 @@ Repositories, webapi, rpc, and other business logic structures are injected into
 #### `internal/repo/persistent`
 
 A repository is an abstract storage (database) that business logic works with.
-This template uses `ent` for CRUD operations and keeps `sqlc` for custom SQL workloads.
 
 #### `internal/repo/cache`
 
@@ -435,7 +430,7 @@ Or more complex business logic:
 ### Clean Architecture Terminology
 
 - **Entities** (`internal/entity`) are the core business objects. They are used throughout the entire application (Use Cases, Controllers, etc.) and are agnostic of storage or transport.
-- **Database Models** (`internal/repo/persistent/ent` and `internal/repo/persistent/sqlc`) are generated code used inside the repository layer.
+- **Database Models** (`internal/repo/persistent/sqlc`) are generated code that represents the database schema. They are private to the repository layer.
 - **Mapping:** The repository layer is responsible for converting ("mapping") database models to business entities. This ensures that a change in the database schema does not force a change in the business logic.
 
 - **Use Cases** is business logic located in `internal/usecase`.

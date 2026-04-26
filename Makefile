@@ -55,10 +55,6 @@ sqlc: ### generate source files from sql
 	sqlc generate
 .PHONY: sqlc
 
-ent: ### generate ent source files
-	ent generate ./internal/repo/persistent/ent/schema
-.PHONY: ent
-
 proto-v1: ### generate source files from proto
 	protoc --go_out=. \
 		--go_opt=paths=source_relative \
@@ -85,12 +81,12 @@ format: ### Run code formatter
 	gci write . --skip-generated -s standard -s default
 .PHONY: format
 
-run: deps sqlc ent swag-v1 proto-v1 ### swag run for API v1
+run: deps sqlc swag-v1 proto-v1 ### swag run for API v1
 	go mod download && \
 	CGO_ENABLED=0 go run -tags migrate ./cmd/app
 .PHONY: run
 
-build: deps sqlc ent swag-v1 proto-v1 ### build the application
+build: deps sqlc swag-v1 proto-v1 ### build the application
 	go mod download && \
 	CGO_ENABLED=0 go build -o ./main ./cmd/app
 .PHONY: build
@@ -124,37 +120,48 @@ mock: ### run mockgen
 	mockgen -source ./internal/usecase/contracts.go -package usecase_test > ./internal/usecase/mocks_usecase_test.go
 .PHONY: mock
 
-migrate-create:  ### create new migration with name="$(name)" from ent schema
-	atlas migrate diff "$(name)" --dir "file://migrations" --to "ent://internal/repo/persistent/ent/schema" --dev-url "docker://postgres/16/dev?search_path=public"
+migrate-create:  ### create new migration with name="$(name)"
+	migrate create -ext sql -dir migrations "$(name)"
 .PHONY: migrate-create
 
-migrate-up: ### apply all pending migrations
-	atlas migrate apply --url '$(PG_URL)?sslmode=disable' --dir "file://migrations"
+migrate-up: ### migration up
+	migrate -path migrations -database '$(PG_URL)?sslmode=disable' up
+.PHONY: migrate-up
+
+migrate-up1: ### migration up
+	migrate -path migrations -database '$(PG_URL)?sslmode=disable' up
 .PHONY: migrate-up
 
 migrate-down: ### rollback last migration
-	atlas migrate down --url '$(PG_URL)?sslmode=disable' --dir "file://migrations" --amount 1
+	migrate -path migrations -database '$(PG_URL)?sslmode=disable' down
+.PHONY: migrate-down
+
+migrate-down1: ### rollback last migration
+	migrate -path migrations -database '$(PG_URL)?sslmode=disable' down 1
 .PHONY: migrate-down
 
 migrate-redo: ### rollback and reapply last migration
-	atlas migrate down --url '$(PG_URL)?sslmode=disable' --dir "file://migrations" --amount 1
-	atlas migrate apply --url '$(PG_URL)?sslmode=disable' --dir "file://migrations"
+	migrate -path migrations -database '$(PG_URL)?sslmode=disable' down 1
+	migrate -path migrations -database '$(PG_URL)?sslmode=disable' up 1
 .PHONY: migrate-redo
 
 migrate-status: ### show migration version
-	atlas migrate status --url '$(PG_URL)?sslmode=disable' --dir "file://migrations"
+	migrate -path migrations -database '$(PG_URL)?sslmode=disable' version
 .PHONY: migrate-status
 
 migrate-list: ### list migrations, order by modified date
 	ls -l migrations/*.up.sql
 .PHONY: migrate-list
 
+migrate-force: ### force migration at a specific version
+	migrate -path migrations -database '$(PG_URL)?sslmode=disable' force "$(version)"
+.PHONY: migrate-list
+
 bin-deps: ### install tools
 	go install tool
+	go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate
 	go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
-	go install entgo.io/ent/cmd/ent@latest
 	go install github.com/air-verse/air@latest
-	curl -sSf https://atlasgo.sh | sh
 	pnpm install -g swagger-typescript-api
 .PHONY: bin-deps
 
