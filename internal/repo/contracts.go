@@ -10,6 +10,19 @@ import (
 //go:generate mockgen -source=contracts.go -destination=../usecase/mocks_repo_test.go -package=usecase_test
 
 type (
+	// TxRepos holds transactional repository accessors that share the same pgx.Tx.
+	// This enables cross-repo atomic operations within a single unit of work.
+	TxRepos struct {
+		Translation TranslationRepo
+	}
+
+	// UnitOfWork manages a database transaction lifecycle.
+	// The callback fn receives TxRepos with all repos sharing the same transaction.
+	// Commits on success, rolls back on error.
+	UnitOfWork interface {
+		Do(ctx context.Context, fn func(TxRepos) error) error
+	}
+
 	// TranslationRepo -.
 	TranslationRepo interface {
 		Store(context.Context, entity.Translation) error
@@ -18,7 +31,7 @@ type (
 
 	// TranslationWebAPI -.
 	TranslationWebAPI interface {
-		Translate(entity.Translation) (entity.Translation, error)
+		Translate(context.Context, entity.Translation) (entity.Translation, error)
 	}
 
 	// TranslationCache is an in-process cache for translation data.

@@ -13,14 +13,21 @@ type UseCase struct {
 	repo   repo.TranslationRepo
 	webAPI repo.TranslationWebAPI
 	cache  repo.TranslationCache
+	uow    repo.UnitOfWork
 }
 
 // New -.
-func New(r repo.TranslationRepo, w repo.TranslationWebAPI, c repo.TranslationCache) *UseCase {
+func New(
+	r repo.TranslationRepo,
+	w repo.TranslationWebAPI,
+	c repo.TranslationCache,
+	uow repo.UnitOfWork,
+) *UseCase {
 	return &UseCase{
 		repo:   r,
 		webAPI: w,
 		cache:  c,
+		uow:    uow,
 	}
 }
 
@@ -49,7 +56,7 @@ func (uc *UseCase) Translate(
 	ctx context.Context,
 	t entity.Translation,
 ) (entity.Translation, error) {
-	translation, err := uc.webAPI.Translate(t)
+	translation, err := uc.webAPI.Translate(ctx, t)
 	if err != nil {
 		return entity.Translation{}, fmt.Errorf(
 			"TranslationUseCase - Translate - s.webAPI.Translate: %w",

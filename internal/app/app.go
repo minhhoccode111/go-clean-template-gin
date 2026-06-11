@@ -48,11 +48,15 @@ func Run(cfg *config.Config) { //nolint: gocyclo,cyclop,funlen,gocritic,nolintli
 		l.Fatal(fmt.Errorf("app - Run - ottercache.New: %w", err))
 	}
 
+	// Unit of Work
+	uow := persistent.NewUnitOfWork(pg)
+
 	// Use-Case
 	translationUseCase := translation.New(
 		persistent.New(pg),
 		webapi.New(),
 		repocache.New(otterCache),
+		uow,
 	)
 
 	// RabbitMQ RPC Server
