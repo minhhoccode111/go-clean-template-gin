@@ -65,6 +65,28 @@ func New() *validator.Validate {
 		return reUsername.MatchString(fl.Field().String())
 	})
 
+	mustRegister(v, "ptr_min", func(fl validator.FieldLevel) bool {
+		field := fl.Field()
+		if field.IsNil() {
+			return true
+		}
+
+		param := fl.Param()
+
+		return v.Var(field.Elem().Interface(), "min="+param) == nil
+	})
+
+	mustRegister(v, "ptr_max", func(fl validator.FieldLevel) bool {
+		field := fl.Field()
+		if field.IsNil() {
+			return true
+		}
+
+		param := fl.Param()
+
+		return v.Var(field.Elem().Interface(), "max="+param) == nil
+	})
+
 	mustRegister(v, "password", func(fl validator.FieldLevel) bool {
 		p := fl.Field().String()
 

@@ -3,6 +3,7 @@ package v1
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
+	"github.com/minhhoccode111/go-clean-template-gin/config"
 	"github.com/minhhoccode111/go-clean-template-gin/internal/usecase"
 	"github.com/minhhoccode111/go-clean-template-gin/pkg/logger"
 )
@@ -10,11 +11,12 @@ import (
 // NewTranslationRoutes -.
 func NewTranslationRoutes(
 	apiV1Group *gin.RouterGroup,
+	cfg *config.Config,
 	t usecase.Translation,
 	l logger.Interface,
 	v *validator.Validate,
 ) {
-	r := &V1{t: t, l: l, v: v}
+	r := NewV1(cfg, t, l, v)
 
 	translationGroup := apiV1Group.Group("/translation")
 

@@ -31,10 +31,12 @@ func NewRouter(
 	v *validator.Validate,
 ) {
 	// Options
+	handler.MaxMultipartMemory = cfg.HTTP.MaxMultipartMemory
 	handler.Use(middleware.Logger(l))
 	handler.Use(middleware.Recovery(l))
-	handler.Use(middleware.CORS(cfg.CORS))
-	handler.Use(middleware.RateLimit(cfg.RateLimit))
+	handler.Use(middleware.BodySize(cfg.HTTP.MaxBodySize))
+	handler.Use(middleware.CORS(cfg))
+	handler.Use(middleware.RateLimit(cfg))
 
 	// Prometheus metrics
 	if cfg.Metrics.Enabled {
@@ -53,6 +55,6 @@ func NewRouter(
 	// Routers
 	apiV1Group := handler.Group("/v1")
 	{
-		v1.NewTranslationRoutes(apiV1Group, t, l, v)
+		v1.NewTranslationRoutes(apiV1Group, cfg, t, l, v)
 	}
 }

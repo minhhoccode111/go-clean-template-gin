@@ -1,8 +1,10 @@
-ifneq ($(wildcard .env),)
-include .env
+ENV_FILE ?= .env
+
+ifneq ($(wildcard $(ENV_FILE)),)
+include $(ENV_FILE)
 export
 else
-$(warning WARNING: .env file not found! Using .env.example)
+$(warning WARNING: $(ENV_FILE) file not found! Using .env.example)
 include .env.example
 export
 endif
@@ -155,12 +157,12 @@ migrate-status: ### show migration version, name, and list all migrations
 	ls migrations/*.up.sql | xargs -n1 basename
 .PHONY: migrate-status
 
-migrate-force: ### force migration at a specific version
+migrate-force: ### force migration at a specific version with version="$(version)"
 	migrate -path migrations -database '$(PG_URL)?sslmode=disable' force "$(version)"
 .PHONY: migrate-force
 
 schema: ### Generate database schema
-	atlas schema inspect -u "$(PG_URL)?sslmode=disable" --format '{{ sql . }}' > docs/schema.sql
+	@pg_isready -d "$(PG_URL)" -q && atlas schema inspect -u "$(PG_URL)?sslmode=disable" --format '{{ sql . }}' > docs/schema.sql || echo "schema: database not reachable, skipping"
 .PHONY: schema
 
 bin-deps: ### install tools
@@ -176,6 +178,27 @@ gen-ts:
 		--output ./ \
 		--name api.ts
 .PHONY: gen-ts
+
+tags:
+	@file=$(word 2,$(MAKECMDGOALS)); \
+	struct=$(word 3,$(MAKECMDGOALS)); \
+	if [ -z "$$file" ]; then \
+		echo "Usage: make tags <file> [struct]"; \
+		exit 1; \
+	fi; \
+	if [ -n "$$struct" ]; then \
+		gomodifytags -file $$file -struct $$struct -add-tags json,validate:required -w; \
+	else \
+		gomodifytags -file $$file -all -add-tags json,validate:required -w; \
+	fi
+.PHONY: tags
+
+deadcode: ### find dead code in the project
+	go run golang.org/x/tools/cmd/deadcode@latest -test ./...
+.PHONY: deadcode
+
+%:
+	@:
 
 pre-commit: swag-v1 proto-v1 mock format schema gen-ts test linter-golangci ### run pre-commit
 .PHONY: pre-commit
