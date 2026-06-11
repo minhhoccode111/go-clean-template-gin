@@ -29,6 +29,9 @@ x-backend-app-environment: &x-backend-app-environment
   GRPC_PORT: "8081"
   # HTTP settings
   HTTP_PORT: "8080"
+  # JWT
+  JWT_SECRET: "change-me-in-production"
+  JWT_TTL: "24h"
   # Logger
   LOG_LEVEL: "debug"
   # Metrics
@@ -53,7 +56,7 @@ services:
     environment:
       <<: *x-db-environment
     volumes:
-      - db_data:/var/lib/postgresql/data
+      - db_data:/var/lib/postgresql
     ports:
       - "5432:5432"
     networks:

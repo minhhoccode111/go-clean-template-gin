@@ -21,6 +21,7 @@ type (
 		Swagger   Swagger
 		CORS      CORS
 		Cache     Cache
+		JWT       JWT
 		RateLimit RateLimit
 	}
 
@@ -31,8 +32,12 @@ type (
 	}
 
 	// HTTP -.
+	// Port, MaxMultipartMemory (max memory for multipart form parsing, default 32MB),
+	// MaxBodySize (max request body size for all endpoints, default 10MB).
 	HTTP struct {
-		Port string `env:"HTTP_PORT,required"`
+		Port               string `env:"HTTP_PORT,required"`
+		MaxMultipartMemory int64  `env:"HTTP_MAX_MULTIPART_MEMORY" envDefault:"33554432"`
+		MaxBodySize        int64  `env:"HTTP_MAX_BODY_SIZE"        envDefault:"10485760"`
 	}
 
 	// Log -.
@@ -88,10 +93,18 @@ type (
 		TTL     time.Duration `env:"CACHE_TTL"      envDefault:"5m"`
 	}
 
+	// JWT -.
+	JWT struct {
+		Secret string        `env:"JWT_SECRET,required"` //nolint:gosec // JWT signing key
+		TTL    time.Duration `env:"JWT_TTL"             envDefault:"24h"`
+	}
+
 	// RateLimit -.
 	RateLimit struct {
-		RequestsPerSecond float64 `env:"RATE_LIMIT_RPS"   envDefault:"10"`
-		Burst             int     `env:"RATE_LIMIT_BURST" envDefault:"20"`
+		RequestsPerSecond float64       `env:"RATE_LIMIT_RPS"       envDefault:"10"`
+		Burst             int           `env:"RATE_LIMIT_BURST"     envDefault:"20"`
+		MaxCost           int           `env:"RATE_LIMIT_CACHE_MAX" envDefault:"10000"`
+		TTL               time.Duration `env:"RATE_LIMIT_CACHE_TTL" envDefault:"10m"`
 	}
 )
 

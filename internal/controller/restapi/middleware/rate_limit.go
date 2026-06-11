@@ -1,31 +1,45 @@
 package middleware
 
 import (
+	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/minhhoccode111/go-clean-template-gin/config"
-	"github.com/minhhoccode111/go-clean-template-gin/internal/controller/restapi/v1/response"
+	pkgcache "github.com/minhhoccode111/go-clean-template-gin/pkg/cache"
 	"golang.org/x/time/rate"
 )
 
-// RateLimit creates a Gin middleware that enforces rate limiting.
-func RateLimit(cfg config.RateLimit) gin.HandlerFunc {
-	// Initialize a global rate limiter.
-	limiter := rate.NewLimiter(rate.Limit(cfg.RequestsPerSecond), cfg.Burst)
+// RateLimit creates a Gin middleware that enforces per-IP rate limiting.
+func RateLimit(cfg *config.Config) gin.HandlerFunc {
+	c, err := pkgcache.New[string, *rate.Limiter](
+		pkgcache.MaxCost(cfg.RateLimit.MaxCost),
+		pkgcache.TTL(cfg.RateLimit.TTL),
+	)
+	if err != nil {
+		panic(fmt.Sprintf("middleware: RateLimit: failed to create cache: %v", err))
+	}
 
-	return func(c *gin.Context) {
-		// Attempt to take a token from the bucket.
-		if !limiter.Allow() {
-			// If not allowed, abort with 429 Too Many Requests
-			c.AbortWithStatusJSON(http.StatusTooManyRequests, response.Error{
-				Error: "Too many requests. Please try again later.",
-			})
+	rps := rate.Limit(cfg.RateLimit.RequestsPerSecond)
+	burst := cfg.RateLimit.Burst
+
+	return func(ctx *gin.Context) {
+		limiter, err := c.GetOrLoad(ctx.Request.Context(), ctx.ClientIP(),
+			func(_ context.Context, _ string) (*rate.Limiter, error) {
+				return rate.NewLimiter(rps, burst), nil
+			},
+		)
+		if err != nil || !limiter.Allow() {
+			messageResponse(
+				ctx,
+				http.StatusTooManyRequests,
+				"Too many requests. Please try again later.",
+			)
 
 			return
 		}
 
-		// Proceed to the next handler if allowed.
-		c.Next()
+		ctx.Next()
 	}
 }
