@@ -14,8 +14,47 @@ import (
 	reflect "reflect"
 
 	entity "github.com/minhhoccode111/go-clean-template-gin/internal/entity"
+	repo "github.com/minhhoccode111/go-clean-template-gin/internal/repo"
 	gomock "go.uber.org/mock/gomock"
 )
+
+// MockUnitOfWork is a mock of UnitOfWork interface.
+type MockUnitOfWork struct {
+	ctrl     *gomock.Controller
+	recorder *MockUnitOfWorkMockRecorder
+	isgomock struct{}
+}
+
+// MockUnitOfWorkMockRecorder is the mock recorder for MockUnitOfWork.
+type MockUnitOfWorkMockRecorder struct {
+	mock *MockUnitOfWork
+}
+
+// NewMockUnitOfWork creates a new mock instance.
+func NewMockUnitOfWork(ctrl *gomock.Controller) *MockUnitOfWork {
+	mock := &MockUnitOfWork{ctrl: ctrl}
+	mock.recorder = &MockUnitOfWorkMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockUnitOfWork) EXPECT() *MockUnitOfWorkMockRecorder {
+	return m.recorder
+}
+
+// Do mocks base method.
+func (m *MockUnitOfWork) Do(ctx context.Context, fn func(repo.TxRepos) error) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Do", ctx, fn)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Do indicates an expected call of Do.
+func (mr *MockUnitOfWorkMockRecorder) Do(ctx, fn any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Do", reflect.TypeOf((*MockUnitOfWork)(nil).Do), ctx, fn)
+}
 
 // MockTranslationRepo is a mock of TranslationRepo interface.
 type MockTranslationRepo struct {
@@ -95,18 +134,18 @@ func (m *MockTranslationWebAPI) EXPECT() *MockTranslationWebAPIMockRecorder {
 }
 
 // Translate mocks base method.
-func (m *MockTranslationWebAPI) Translate(arg0 entity.Translation) (entity.Translation, error) {
+func (m *MockTranslationWebAPI) Translate(arg0 context.Context, arg1 entity.Translation) (entity.Translation, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Translate", arg0)
+	ret := m.ctrl.Call(m, "Translate", arg0, arg1)
 	ret0, _ := ret[0].(entity.Translation)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Translate indicates an expected call of Translate.
-func (mr *MockTranslationWebAPIMockRecorder) Translate(arg0 any) *gomock.Call {
+func (mr *MockTranslationWebAPIMockRecorder) Translate(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Translate", reflect.TypeOf((*MockTranslationWebAPI)(nil).Translate), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Translate", reflect.TypeOf((*MockTranslationWebAPI)(nil).Translate), arg0, arg1)
 }
 
 // MockTranslationCache is a mock of TranslationCache interface.

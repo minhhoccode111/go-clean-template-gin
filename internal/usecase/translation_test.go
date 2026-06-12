@@ -30,7 +30,7 @@ func translationUseCase(t *testing.T) (*translation.UseCase, *MockTranslationRep
 	webAPI := NewMockTranslationWebAPI(mockCtl)
 	cache := NewMockTranslationCache(mockCtl)
 
-	useCase := translation.New(repo, webAPI, cache)
+	useCase := translation.New(repo, webAPI, cache, nil)
 
 	return useCase, repo, webAPI, cache
 }
@@ -94,7 +94,7 @@ func TestTranslate(t *testing.T) { //nolint:tparallel // data races here
 		{
 			name: "success - cache invalidated",
 			mock: func() {
-				webAPI.EXPECT().Translate(entity.Translation{}).Return(entity.Translation{}, nil)
+				webAPI.EXPECT().Translate(context.Background(), entity.Translation{}).Return(entity.Translation{}, nil)
 				repo.EXPECT().Store(context.Background(), entity.Translation{}).Return(nil)
 				cache.EXPECT().InvalidateHistory(context.Background())
 			},
@@ -104,7 +104,7 @@ func TestTranslate(t *testing.T) { //nolint:tparallel // data races here
 		{
 			name: "web API error",
 			mock: func() {
-				webAPI.EXPECT().Translate(entity.Translation{}).Return(entity.Translation{}, errInternalServErr)
+				webAPI.EXPECT().Translate(context.Background(), entity.Translation{}).Return(entity.Translation{}, errInternalServErr)
 			},
 			res: entity.Translation{},
 			err: errInternalServErr,
@@ -112,7 +112,7 @@ func TestTranslate(t *testing.T) { //nolint:tparallel // data races here
 		{
 			name: "repo error",
 			mock: func() {
-				webAPI.EXPECT().Translate(entity.Translation{}).Return(entity.Translation{}, nil)
+				webAPI.EXPECT().Translate(context.Background(), entity.Translation{}).Return(entity.Translation{}, nil)
 				repo.EXPECT().Store(context.Background(), entity.Translation{}).Return(errInternalServErr)
 			},
 			res: entity.Translation{},

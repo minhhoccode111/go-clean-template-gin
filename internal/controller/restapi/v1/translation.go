@@ -54,6 +54,8 @@ func (r *V1) doTranslate(c *gin.Context) {
 		return
 	}
 
+	body.Clean()
+
 	if err := r.v.Struct(body); err != nil {
 		r.l.Error(err, "restapi - v1 - doTranslate")
 
