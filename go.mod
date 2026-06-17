@@ -28,7 +28,7 @@ require (
 	github.com/jackc/pgx/v5 v5.10.0
 	github.com/maypok86/otter/v2 v2.3.0
 	github.com/nats-io/nats.go v1.52.0
-	github.com/rabbitmq/amqp091-go v1.11.0
+	github.com/rabbitmq/amqp091-go v1.12.0
 	github.com/rs/zerolog v1.35.1
 	github.com/stretchr/testify v1.11.1
 	github.com/swaggo/files v1.0.1
