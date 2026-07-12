@@ -2,48 +2,40 @@ package middleware
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
-	pkgjwt "github.com/minhhoccode111/go-clean-template-gin/pkg/jwt"
+	"github.com/minhhoccode111/go-clean-template-gin/pkg/jwt"
 )
 
-type ctxKey string
+const _bearerParts = 2
 
-const (
-	CtxUserIDKey ctxKey = "userID"
-	CtxUsername  ctxKey = "username"
-	CtxUserRoles ctxKey = "userRoles"
-)
-
-func extractToken(c *gin.Context) string {
-	const scheme = "Bearer "
-	if h := c.GetHeader("Authorization"); len(h) > len(scheme) && h[:len(scheme)] == scheme {
-		return h[len(scheme):]
-	}
-
-	return ""
-}
-
-// Auth validates the JWT and stores user claims in the Gin context.
-func Auth(secret string) gin.HandlerFunc {
+// Auth returns a JWT authentication middleware for Gin.
+func Auth(jwtManager *jwt.Manager) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		token := extractToken(c)
-		if token == "" {
-			messageResponse(c, http.StatusUnauthorized, "Unauthorized")
+		header := c.GetHeader("Authorization")
+		if header == "" {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "missing authorization header"})
 
 			return
 		}
 
-		claims, err := pkgjwt.ValidateToken(token, secret)
+		parts := strings.SplitN(header, " ", _bearerParts)
+		if len(parts) != _bearerParts || parts[0] != "Bearer" {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid authorization header format"})
+
+			return
+		}
+
+		userID, err := jwtManager.ParseToken(parts[1])
 		if err != nil {
-			messageResponse(c, http.StatusUnauthorized, "Unauthorized")
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid or expired token"})
 
 			return
 		}
 
-		c.Set(string(CtxUserIDKey), claims.UserID)
-		c.Set(string(CtxUsername), claims.Username)
-		c.Set(string(CtxUserRoles), claims.Roles)
+		c.Set("userID", userID)
+
 		c.Next()
 	}
 }

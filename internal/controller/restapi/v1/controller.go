@@ -11,14 +11,25 @@ import (
 type V1 struct {
 	cfg *config.Config
 	t   usecase.Translation
+	u   usecase.User
+	tk  usecase.Task
 	l   logger.Interface
 	v   *validator.Validate
 }
 
-func NewV1(cfg *config.Config, t usecase.Translation, l logger.Interface, v *validator.Validate) *V1 {
+func NewV1(
+	cfg *config.Config,
+	t usecase.Translation,
+	u usecase.User,
+	tk usecase.Task,
+	l logger.Interface,
+	v *validator.Validate,
+) *V1 {
 	return &V1{
 		cfg: cfg,
 		t:   t,
+		u:   u,
+		tk:  tk,
 		l:   l,
 		v:   v,
 	}

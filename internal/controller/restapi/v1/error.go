@@ -6,5 +6,5 @@ import (
 )
 
 func errorResponse(c *gin.Context, code int, msg string) {
-	c.AbortWithStatusJSON(code, response.Message{Message: msg})
+	c.AbortWithStatusJSON(code, response.Error{Error: msg})
 }

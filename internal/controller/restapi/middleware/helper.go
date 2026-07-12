@@ -2,6 +2,13 @@ package middleware
 
 import "github.com/gin-gonic/gin"
 
+type contextKey string
+
+const (
+	CtxUserIDKey contextKey = "userID"
+	CtxUserRoles contextKey = "userRoles"
+)
+
 type msg struct {
 	Message string `json:"message"`
 }

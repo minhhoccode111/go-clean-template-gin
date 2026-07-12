@@ -6,12 +6,15 @@ import (
 	"testing"
 
 	"github.com/minhhoccode111/go-clean-template-gin/internal/entity"
+	"github.com/minhhoccode111/go-clean-template-gin/internal/usecase"
 	"github.com/minhhoccode111/go-clean-template-gin/internal/usecase/translation"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
 
 var errInternalServErr = errors.New("internal server error")
+
+const testUserID = "test-user-123"
 
 type test struct {
 	name string
@@ -20,11 +23,11 @@ type test struct {
 	err  error
 }
 
-func translationUseCase(t *testing.T) (*translation.UseCase, *MockTranslationRepo, *MockTranslationWebAPI, *MockTranslationCache) {
+func translationUseCase(t *testing.T) (usecase.Translation, *MockTranslationRepo, *MockTranslationWebAPI, *MockTranslationCache) {
 	t.Helper()
 
 	mockCtl := gomock.NewController(t)
-	defer mockCtl.Finish()
+	t.Cleanup(mockCtl.Finish)
 
 	repo := NewMockTranslationRepo(mockCtl)
 	webAPI := NewMockTranslationWebAPI(mockCtl)
@@ -35,18 +38,18 @@ func translationUseCase(t *testing.T) (*translation.UseCase, *MockTranslationRep
 	return useCase, repo, webAPI, cache
 }
 
-func TestHistory(t *testing.T) { //nolint:tparallel // data races here
+func TestHistory(t *testing.T) {
 	t.Parallel()
 
-	translationUseCase, repo, _, cache := translationUseCase(t)
+	useCase, repo, _, cache := translationUseCase(t)
 
-	tests := []test{
+		tests := []test{
 		{
 			name: "cache miss - empty result from db",
 			mock: func() {
-				cache.EXPECT().GetHistory(context.Background()).Return(nil, false)
-				repo.EXPECT().GetHistory(context.Background()).Return(nil, nil)
-				cache.EXPECT().SetHistory(context.Background(), []entity.Translation(nil)).Return(true)
+				cache.EXPECT().GetHistory(gomock.Any()).Return(nil, false)
+				repo.EXPECT().GetHistory(gomock.Any(), testUserID).Return(nil, nil)
+				cache.EXPECT().SetHistory(gomock.Any(), []entity.Translation(nil)).Return(true)
 			},
 			res: entity.TranslationHistory{},
 			err: nil,
@@ -55,7 +58,7 @@ func TestHistory(t *testing.T) { //nolint:tparallel // data races here
 			name: "cache hit",
 			mock: func() {
 				cached := []entity.Translation{{Original: "hello", Translation: "привет"}}
-				cache.EXPECT().GetHistory(context.Background()).Return(cached, true)
+				cache.EXPECT().GetHistory(gomock.Any()).Return(cached, true)
 			},
 			res: entity.TranslationHistory{History: []entity.Translation{{Original: "hello", Translation: "привет"}}},
 			err: nil,
@@ -63,40 +66,38 @@ func TestHistory(t *testing.T) { //nolint:tparallel // data races here
 		{
 			name: "cache miss - repo error",
 			mock: func() {
-				cache.EXPECT().GetHistory(context.Background()).Return(nil, false)
-				repo.EXPECT().GetHistory(context.Background()).Return(nil, errInternalServErr)
+				cache.EXPECT().GetHistory(gomock.Any()).Return(nil, false)
+				repo.EXPECT().GetHistory(gomock.Any(), testUserID).Return(nil, errInternalServErr)
 			},
 			res: entity.TranslationHistory{},
 			err: errInternalServErr,
 		},
 	}
 
-	for _, tc := range tests { //nolint:paralleltest // data races here
-		localTc := tc
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.mock()
 
-		t.Run(localTc.name, func(t *testing.T) {
-			localTc.mock()
+			res, err := useCase.History(context.Background(), testUserID)
 
-			res, err := translationUseCase.History(context.Background())
-
-			require.Equal(t, res, localTc.res)
-			require.ErrorIs(t, err, localTc.err)
+			require.Equal(t, res, tc.res)
+			require.ErrorIs(t, err, tc.err)
 		})
 	}
 }
 
-func TestTranslate(t *testing.T) { //nolint:tparallel // data races here
+func TestTranslate(t *testing.T) {
 	t.Parallel()
 
-	translationUseCase, repo, webAPI, cache := translationUseCase(t)
+	useCase, repo, webAPI, cache := translationUseCase(t)
 
 	tests := []test{
 		{
 			name: "success - cache invalidated",
 			mock: func() {
-				webAPI.EXPECT().Translate(context.Background(), entity.Translation{}).Return(entity.Translation{}, nil)
-				repo.EXPECT().Store(context.Background(), entity.Translation{}).Return(nil)
-				cache.EXPECT().InvalidateHistory(context.Background())
+				webAPI.EXPECT().Translate(gomock.Any(), entity.Translation{}).Return(entity.Translation{}, nil)
+				repo.EXPECT().Store(gomock.Any(), testUserID, entity.Translation{}).Return(nil)
+				cache.EXPECT().InvalidateHistory(gomock.Any())
 			},
 			res: entity.Translation{},
 			err: nil,
@@ -104,7 +105,7 @@ func TestTranslate(t *testing.T) { //nolint:tparallel // data races here
 		{
 			name: "web API error",
 			mock: func() {
-				webAPI.EXPECT().Translate(context.Background(), entity.Translation{}).Return(entity.Translation{}, errInternalServErr)
+				webAPI.EXPECT().Translate(gomock.Any(), entity.Translation{}).Return(entity.Translation{}, errInternalServErr)
 			},
 			res: entity.Translation{},
 			err: errInternalServErr,
@@ -112,24 +113,22 @@ func TestTranslate(t *testing.T) { //nolint:tparallel // data races here
 		{
 			name: "repo error",
 			mock: func() {
-				webAPI.EXPECT().Translate(context.Background(), entity.Translation{}).Return(entity.Translation{}, nil)
-				repo.EXPECT().Store(context.Background(), entity.Translation{}).Return(errInternalServErr)
+				webAPI.EXPECT().Translate(gomock.Any(), entity.Translation{}).Return(entity.Translation{}, nil)
+				repo.EXPECT().Store(gomock.Any(), testUserID, entity.Translation{}).Return(errInternalServErr)
 			},
 			res: entity.Translation{},
 			err: errInternalServErr,
 		},
 	}
 
-	for _, tc := range tests { //nolint:paralleltest // data races here
-		localTc := tc
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.mock()
 
-		t.Run(localTc.name, func(t *testing.T) {
-			localTc.mock()
+			res, err := useCase.Translate(context.Background(), testUserID, entity.Translation{})
 
-			res, err := translationUseCase.Translate(context.Background(), entity.Translation{})
-
-			require.EqualValues(t, res, localTc.res)
-			require.ErrorIs(t, err, localTc.err)
+			require.EqualValues(t, res, tc.res)
+			require.ErrorIs(t, err, tc.err)
 		})
 	}
 }

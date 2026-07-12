@@ -23,6 +23,7 @@ type (
 		Cache     Cache
 		JWT       JWT
 		RateLimit RateLimit
+		Tracing   Tracing
 	}
 
 	// App -.
@@ -105,6 +106,14 @@ type (
 		Burst             int           `env:"RATE_LIMIT_BURST"     envDefault:"20"`
 		MaxCost           int           `env:"RATE_LIMIT_CACHE_MAX" envDefault:"10000"`
 		TTL               time.Duration `env:"RATE_LIMIT_CACHE_TTL" envDefault:"10m"`
+	}
+
+	// Tracing -.
+	Tracing struct {
+		Enabled      bool    `env:"TRACING_ENABLED" envDefault:"false"`
+		OTLPEndpoint string  `env:"TRACING_OTLP_ENDPOINT" envDefault:"localhost:4317"`
+		OTLPInsecure bool    `env:"TRACING_OTLP_INSECURE" envDefault:"true"`
+		SampleRate   float64 `env:"TRACING_SAMPLE_RATE" envDefault:"0.1"`
 	}
 )
 

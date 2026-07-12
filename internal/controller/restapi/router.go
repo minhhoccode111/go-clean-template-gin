@@ -6,10 +6,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"github.com/minhhoccode111/go-clean-template-gin/config"
-	_ "github.com/minhhoccode111/go-clean-template-gin/docs" // Swagger docs.
+	_ "github.com/minhhoccode111/go-clean-template-gin/docs"
 	"github.com/minhhoccode111/go-clean-template-gin/internal/controller/restapi/middleware"
 	v1 "github.com/minhhoccode111/go-clean-template-gin/internal/controller/restapi/v1"
 	"github.com/minhhoccode111/go-clean-template-gin/internal/usecase"
+	"github.com/minhhoccode111/go-clean-template-gin/pkg/jwt"
 	"github.com/minhhoccode111/go-clean-template-gin/pkg/logger"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -18,15 +19,22 @@ import (
 
 // NewRouter -.
 // Swagger spec:
-// @title       Go Clean Template API
-// @description Using a translation service as an example
-// @version     1.0
-// @host        localhost:8080
-// @BasePath    /v1
+//
+//	@title       Go Clean Template API
+//	@description Multi-domain clean architecture template with translation, user, and task management
+//	@version     1.0
+//	@host        localhost:8080
+//	@BasePath    /v1
+//	@securityDefinitions.apikey BearerAuth
+//	@in header
+//	@name Authorization
 func NewRouter(
 	handler *gin.Engine,
 	cfg *config.Config,
 	t usecase.Translation,
+	u usecase.User,
+	tk usecase.Task,
+	jwtManager *jwt.Manager,
 	l logger.Interface,
 	v *validator.Validate,
 ) {
@@ -55,6 +63,6 @@ func NewRouter(
 	// Routers
 	apiV1Group := handler.Group("/v1")
 	{
-		v1.NewTranslationRoutes(apiV1Group, cfg, t, l, v)
+		v1.NewRoutes(apiV1Group, cfg, t, u, tk, jwtManager, l, v)
 	}
 }

@@ -2,8 +2,9 @@ package middleware
 
 import (
 	"context"
+	"strings"
 
-	pkgjwt "github.com/minhhoccode111/go-clean-template-gin/pkg/jwt"
+	"github.com/minhhoccode111/go-clean-template-gin/pkg/jwt"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
@@ -12,17 +13,17 @@ import (
 
 type ctxKey string
 
-const claimsKey ctxKey = "jwtClaims"
+const userIDKey ctxKey = "userID"
 
-// ClaimsFromContext extracts the JWT claims from the context.
-func ClaimsFromContext(ctx context.Context) (*pkgjwt.ClaimsJWT, bool) {
-	claims, ok := ctx.Value(claimsKey).(*pkgjwt.ClaimsJWT)
+// UserIDFromContext extracts the authenticated user ID from the context.
+func UserIDFromContext(ctx context.Context) (string, bool) {
+	userID, ok := ctx.Value(userIDKey).(string)
 
-	return claims, ok
+	return userID, ok
 }
 
 // AuthInterceptor returns a gRPC unary interceptor for JWT authentication.
-func AuthInterceptor(secret string) grpc.UnaryServerInterceptor {
+func AuthInterceptor(jwtManager *jwt.Manager) grpc.UnaryServerInterceptor {
 	skipAuthMethods := map[string]bool{
 		"/grpc.v1.AuthService/Register": true,
 		"/grpc.v1.AuthService/Login":    true,
@@ -43,12 +44,17 @@ func AuthInterceptor(secret string) grpc.UnaryServerInterceptor {
 			return nil, status.Error(codes.Unauthenticated, "missing authorization token")
 		}
 
-		claims, err := pkgjwt.ValidateToken(values[0], secret)
+		token := strings.TrimPrefix(values[0], "Bearer ")
+		if token == values[0] {
+			return nil, status.Error(codes.Unauthenticated, "invalid authorization header format")
+		}
+
+		userID, err := jwtManager.ParseToken(token)
 		if err != nil {
 			return nil, status.Error(codes.Unauthenticated, "invalid or expired token")
 		}
 
-		ctx = context.WithValue(ctx, claimsKey, claims)
+		ctx = context.WithValue(ctx, userIDKey, userID)
 
 		return handler(ctx, req)
 	}

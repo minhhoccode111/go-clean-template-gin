@@ -6,6 +6,7 @@ import (
 
 	"github.com/minhhoccode111/go-clean-template-gin/internal/entity"
 	"github.com/minhhoccode111/go-clean-template-gin/internal/repo"
+	"github.com/minhhoccode111/go-clean-template-gin/internal/usecase"
 )
 
 // UseCase -.
@@ -16,29 +17,28 @@ type UseCase struct {
 	uow    repo.UnitOfWork
 }
 
-// New -.
+// New returns a Translation usecase instrumented with OpenTelemetry tracing spans.
 func New(
 	r repo.TranslationRepo,
 	w repo.TranslationWebAPI,
 	c repo.TranslationCache,
 	uow repo.UnitOfWork,
-) *UseCase {
-	return &UseCase{
+) usecase.Translation {
+	return newTraced(&UseCase{
 		repo:   r,
 		webAPI: w,
 		cache:  c,
 		uow:    uow,
-	}
+	})
 }
 
 // History - getting translate history from store.
-// Uses cache-aside: returns cached results when available, falls back to DB otherwise.
-func (uc *UseCase) History(ctx context.Context) (entity.TranslationHistory, error) {
+func (uc *UseCase) History(ctx context.Context, userID string) (entity.TranslationHistory, error) {
 	if cached, ok := uc.cache.GetHistory(ctx); ok {
 		return entity.TranslationHistory{History: cached}, nil
 	}
 
-	translations, err := uc.repo.GetHistory(ctx)
+	translations, err := uc.repo.GetHistory(ctx, userID)
 	if err != nil {
 		return entity.TranslationHistory{}, fmt.Errorf(
 			"TranslationUseCase - History - s.repo.GetHistory: %w",
@@ -54,6 +54,7 @@ func (uc *UseCase) History(ctx context.Context) (entity.TranslationHistory, erro
 // Translate -.
 func (uc *UseCase) Translate(
 	ctx context.Context,
+	userID string,
 	t entity.Translation,
 ) (entity.Translation, error) {
 	translation, err := uc.webAPI.Translate(ctx, t)
@@ -64,7 +65,7 @@ func (uc *UseCase) Translate(
 		)
 	}
 
-	err = uc.repo.Store(ctx, translation)
+	err = uc.repo.Store(ctx, userID, translation)
 	if err != nil {
 		return entity.Translation{}, fmt.Errorf(
 			"TranslationUseCase - Translate - s.repo.Store: %w",
@@ -72,7 +73,6 @@ func (uc *UseCase) Translate(
 		)
 	}
 
-	// Invalidate the history cache so the next History call hits the DB.
 	uc.cache.InvalidateHistory(ctx)
 
 	return translation, nil

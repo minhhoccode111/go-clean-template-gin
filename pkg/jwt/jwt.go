@@ -1,4 +1,4 @@
-// Package jwt provides JWT generation and validation for the application.
+// Package jwt provides JWT generation and validation.
 package jwt
 
 import (
@@ -8,52 +8,64 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-// ClaimsJWT holds the custom JWT claims.
-type ClaimsJWT struct {
-	UserID   int64    `json:"user_id"`
-	Username string   `json:"username"`
-	Roles    []string `json:"roles"`
-	jwt.RegisteredClaims
+// Manager -.
+type Manager struct {
+	secret      string
+	tokenExpiry time.Duration
 }
 
-// GenerateToken creates a signed HS256 JWT for the given user.
-func GenerateToken(
-	userID int64,
-	username, secret string,
-	roles []string,
-	ttl time.Duration,
-) (string, error) {
-	claims := ClaimsJWT{
-		UserID:   userID,
-		Username: username,
-		Roles:    roles,
-		RegisteredClaims: jwt.RegisteredClaims{
-			Subject:   fmt.Sprintf("%d", userID),
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(ttl)),
-			IssuedAt:  jwt.NewNumericDate(time.Now()),
-		},
+// New -.
+func New(secret string, tokenExpiry time.Duration) *Manager {
+	return &Manager{
+		secret:      secret,
+		tokenExpiry: tokenExpiry,
+	}
+}
+
+// GenerateToken creates a signed HS256 JWT containing the userID.
+func (m *Manager) GenerateToken(userID string) (string, error) {
+	claims := jwt.MapClaims{
+		"sub": userID,
+		"exp": time.Now().Add(m.tokenExpiry).Unix(),
+		"iat": time.Now().Unix(),
 	}
 
-	return jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(secret))
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	signed, err := token.SignedString([]byte(m.secret))
+	if err != nil {
+		return "", fmt.Errorf("JWT - GenerateToken - token.SignedString: %w", err)
+	}
+
+	return signed, nil
 }
 
-// ValidateToken parses and validates a JWT string, returning the typed claims.
-func ValidateToken(tokenStr, secret string) (*ClaimsJWT, error) {
-	token, err := jwt.ParseWithClaims(tokenStr, &ClaimsJWT{}, func(t *jwt.Token) (any, error) {
+// ParseToken validates and returns the userID from a JWT string.
+func (m *Manager) ParseToken(tokenStr string) (string, error) {
+	token, err := jwt.Parse(tokenStr, func(t *jwt.Token) (any, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, jwt.ErrTokenSignatureInvalid
 		}
 
-		return []byte(secret), nil
+		return []byte(m.secret), nil
 	})
 	if err != nil {
-		return nil, err
+		return "", fmt.Errorf("JWT - ParseToken - jwt.Parse: %w", err)
 	}
 
-	claims, ok := token.Claims.(*ClaimsJWT)
-	if !ok || !token.Valid {
-		return nil, jwt.ErrTokenInvalidClaims
+	if !token.Valid {
+		return "", jwt.ErrTokenInvalidClaims
 	}
 
-	return claims, nil
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		return "", jwt.ErrTokenInvalidClaims
+	}
+
+	userID, ok := claims["sub"].(string)
+	if !ok {
+		return "", jwt.ErrTokenInvalidClaims
+	}
+
+	return userID, nil
 }

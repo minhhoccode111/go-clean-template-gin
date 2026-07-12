@@ -7,9 +7,9 @@ import (
 	"github.com/minhhoccode111/go-clean-template-gin/pkg/logger"
 )
 
-// V1 -.
-type V1 struct {
-	v1.TranslationServer
+// TranslationController -.
+type TranslationController struct {
+	v1.UnimplementedTranslationServer
 
 	t usecase.Translation
 	l logger.Interface

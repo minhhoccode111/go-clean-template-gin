@@ -20,14 +20,13 @@ func NewUnitOfWork(pg *postgres.Postgres) *PgUnitOfWork {
 }
 
 // Do executes fn within a database transaction.
-// Commits on success, rolls back on error.
 func (u *PgUnitOfWork) Do(ctx context.Context, fn func(repo.TxRepos) error) error {
 	tx, err := u.pg.Pool.Begin(ctx)
 	if err != nil {
 		return fmt.Errorf("PgUnitOfWork - Do - u.pg.Pool.Begin: %w", err)
 	}
 
-	defer tx.Rollback(ctx) //nolint:errcheck // rollback is safe to call after commit
+	defer tx.Rollback(ctx) //nolint:errcheck
 
 	q := sqlc.New(tx)
 
@@ -36,7 +35,7 @@ func (u *PgUnitOfWork) Do(ctx context.Context, fn func(repo.TxRepos) error) erro
 	}
 
 	if err := fn(txRepos); err != nil {
-		return err // rollback via defer
+		return err
 	}
 
 	if err := tx.Commit(ctx); err != nil {

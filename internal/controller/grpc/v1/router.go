@@ -1,18 +1,30 @@
 package v1
 
 import (
-	"github.com/go-playground/validator/v10"
 	v1 "github.com/minhhoccode111/go-clean-template-gin/docs/proto/v1"
 	"github.com/minhhoccode111/go-clean-template-gin/internal/usecase"
 	"github.com/minhhoccode111/go-clean-template-gin/pkg/logger"
+	"github.com/go-playground/validator/v10"
 	pbgrpc "google.golang.org/grpc"
 )
 
 // NewTranslationRoutes -.
 func NewTranslationRoutes(app *pbgrpc.Server, t usecase.Translation, l logger.Interface) {
-	r := &V1{t: t, l: l, v: validator.New(validator.WithRequiredStructEnabled())}
+	r := &TranslationController{t: t, l: l, v: validator.New(validator.WithRequiredStructEnabled())}
 
-	{
-		v1.RegisterTranslationServer(app, r)
-	}
+	v1.RegisterTranslationServer(app, r)
+}
+
+// NewAuthRoutes -.
+func NewAuthRoutes(app *pbgrpc.Server, u usecase.User, l logger.Interface) {
+	r := &AuthController{u: u, l: l, v: validator.New(validator.WithRequiredStructEnabled())}
+
+	v1.RegisterAuthServiceServer(app, r)
+}
+
+// NewTaskRoutes -.
+func NewTaskRoutes(app *pbgrpc.Server, tk usecase.Task, l logger.Interface) {
+	r := &TaskController{tk: tk, l: l, v: validator.New(validator.WithRequiredStructEnabled())}
+
+	v1.RegisterTaskServiceServer(app, r)
 }

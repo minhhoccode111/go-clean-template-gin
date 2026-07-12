@@ -10,48 +10,45 @@ import (
 )
 
 const (
-	testSecret   = "test-secret"
-	testUserID   = int64(42)
-	testUsername = "testuser"
+	testSecret = "test-secret"
+	testUserID = "42"
 )
 
-var testUserRoles = []string{"user"} //nolint:gochecknoglobals // intended
-
-func TestGenerateAndValidateToken(t *testing.T) {
+func TestGenerateAndParseToken(t *testing.T) {
 	t.Parallel()
 
-	token, err := jwt.GenerateToken(testUserID, testUsername, testSecret, testUserRoles, time.Hour)
+	manager := jwt.New(testSecret, time.Hour)
+
+	token, err := manager.GenerateToken(testUserID)
 	require.NoError(t, err)
 	require.NotEmpty(t, token)
 
-	claims, err := jwt.ValidateToken(token, testSecret)
+	parsedUserID, err := manager.ParseToken(token)
 	require.NoError(t, err)
-	assert.Equal(t, testUserID, claims.UserID)
-	assert.Equal(t, testUsername, claims.Username)
+	assert.Equal(t, testUserID, parsedUserID)
 }
 
-func TestValidateToken_WrongSecret(t *testing.T) {
+func TestParseToken_WrongSecret(t *testing.T) {
 	t.Parallel()
 
-	token, err := jwt.GenerateToken(testUserID, testUsername, testSecret, testUserRoles, time.Hour)
+	manager := jwt.New(testSecret, time.Hour)
+
+	token, err := manager.GenerateToken(testUserID)
 	require.NoError(t, err)
 
-	_, err = jwt.ValidateToken(token, "wrong-secret")
+	differentManager := jwt.New("wrong-secret", time.Hour)
+	_, err = differentManager.ParseToken(token)
 	assert.Error(t, err)
 }
 
-func TestValidateToken_Expired(t *testing.T) {
+func TestParseToken_Expired(t *testing.T) {
 	t.Parallel()
 
-	token, err := jwt.GenerateToken(
-		testUserID,
-		testUsername,
-		testSecret,
-		testUserRoles,
-		-time.Second,
-	)
+	manager := jwt.New(testSecret, -time.Second)
+
+	token, err := manager.GenerateToken(testUserID)
 	require.NoError(t, err)
 
-	_, err = jwt.ValidateToken(token, testSecret)
+	_, err = manager.ParseToken(token)
 	assert.Error(t, err)
 }

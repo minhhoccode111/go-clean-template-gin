@@ -11,22 +11,19 @@ import (
 
 type (
 	// TxRepos holds transactional repository accessors that share the same pgx.Tx.
-	// This enables cross-repo atomic operations within a single unit of work.
 	TxRepos struct {
 		Translation TranslationRepo
 	}
 
 	// UnitOfWork manages a database transaction lifecycle.
-	// The callback fn receives TxRepos with all repos sharing the same transaction.
-	// Commits on success, rolls back on error.
 	UnitOfWork interface {
 		Do(ctx context.Context, fn func(TxRepos) error) error
 	}
 
 	// TranslationRepo -.
 	TranslationRepo interface {
-		Store(context.Context, entity.Translation) error
-		GetHistory(context.Context) ([]entity.Translation, error)
+		Store(ctx context.Context, userID string, t entity.Translation) error
+		GetHistory(ctx context.Context, userID string) ([]entity.Translation, error)
 	}
 
 	// TranslationWebAPI -.
@@ -35,14 +32,32 @@ type (
 	}
 
 	// TranslationCache is an in-process cache for translation data.
-	// Implementations must be safe for concurrent use.
 	TranslationCache interface {
-		// GetHistory returns the cached translation history and whether it was found.
 		GetHistory(ctx context.Context) ([]entity.Translation, bool)
-		// SetHistory stores the translation history in the cache.
-		// Returns false if the entry was not admitted by the cache.
 		SetHistory(ctx context.Context, history []entity.Translation) bool
-		// InvalidateHistory removes the cached history so the next read hits the DB.
 		InvalidateHistory(ctx context.Context)
+	}
+
+	// UserRepo -.
+	UserRepo interface {
+		Store(ctx context.Context, user *entity.User) error
+		GetByID(ctx context.Context, id string) (entity.User, error)
+		GetByEmail(ctx context.Context, email string) (entity.User, error)
+	}
+
+	// TaskRepo -.
+	TaskRepo interface {
+		Store(ctx context.Context, task *entity.Task) error
+		GetByID(ctx context.Context, userID, taskID string) (entity.Task, error)
+		List(ctx context.Context, userID string, filter TaskFilter) ([]entity.Task, int, error)
+		Update(ctx context.Context, task *entity.Task) error
+		Delete(ctx context.Context, userID, taskID string) error
+	}
+
+	// TaskFilter -.
+	TaskFilter struct {
+		Status *entity.TaskStatus
+		Limit  uint64
+		Offset uint64
 	}
 )

@@ -18,11 +18,8 @@ import (
 const (
 	respOK       = "ok"
 	testSecret   = "test-secret"
-	testUserID   = int64(42)
-	testUsername = "testuser"
+	testUserID   = "42"
 )
-
-var testUserRoles = []string{"user"} //nolint:gochecknoglobals // test helper
 
 type ctxCapture struct {
 	ctx context.Context
@@ -41,7 +38,9 @@ func (c *ctxCapture) capturingHandler(ctx context.Context, _ any) (any, error) {
 func genToken(t *testing.T) string {
 	t.Helper()
 
-	token, err := pkgjwt.GenerateToken(testUserID, testUsername, testSecret, testUserRoles, time.Hour)
+	manager := pkgjwt.New(testSecret, time.Hour)
+
+	token, err := manager.GenerateToken(testUserID)
 	require.NoError(t, err)
 
 	return token
@@ -50,7 +49,8 @@ func genToken(t *testing.T) string {
 func runSkipAuthTest(t *testing.T, method string) {
 	t.Helper()
 
-	interceptor := grpcmw.AuthInterceptor(testSecret)
+	jwtManager := pkgjwt.New(testSecret, time.Hour)
+	interceptor := grpcmw.AuthInterceptor(jwtManager)
 	info := &grpc.UnaryServerInfo{FullMethod: method}
 
 	called := false
@@ -80,7 +80,8 @@ func TestAuthInterceptor_SkipLogin(t *testing.T) {
 func TestAuthInterceptor_MissingMetadata(t *testing.T) {
 	t.Parallel()
 
-	interceptor := grpcmw.AuthInterceptor(testSecret)
+	jwtManager := pkgjwt.New(testSecret, time.Hour)
+	interceptor := grpcmw.AuthInterceptor(jwtManager)
 	info := &grpc.UnaryServerInfo{FullMethod: "/grpc.v1.TaskService/GetTask"}
 
 	capture := &ctxCapture{}
@@ -99,7 +100,8 @@ func TestAuthInterceptor_MissingMetadata(t *testing.T) {
 func TestAuthInterceptor_MissingAuthorizationToken(t *testing.T) {
 	t.Parallel()
 
-	interceptor := grpcmw.AuthInterceptor(testSecret)
+	jwtManager := pkgjwt.New(testSecret, time.Hour)
+	interceptor := grpcmw.AuthInterceptor(jwtManager)
 	info := &grpc.UnaryServerInfo{FullMethod: "/grpc.v1.TaskService/GetTask"}
 
 	md := metadata.New(map[string]string{"other-key": "value"})
@@ -121,10 +123,11 @@ func TestAuthInterceptor_MissingAuthorizationToken(t *testing.T) {
 func TestAuthInterceptor_InvalidToken(t *testing.T) {
 	t.Parallel()
 
-	interceptor := grpcmw.AuthInterceptor(testSecret)
+	jwtManager := pkgjwt.New(testSecret, time.Hour)
+	interceptor := grpcmw.AuthInterceptor(jwtManager)
 	info := &grpc.UnaryServerInfo{FullMethod: "/grpc.v1.TaskService/GetTask"}
 
-	md := metadata.Pairs("authorization", "invalid-token")
+	md := metadata.Pairs("authorization", "Bearer invalid-token")
 	ctx := metadata.NewIncomingContext(t.Context(), md)
 
 	capture := &ctxCapture{}
@@ -143,12 +146,13 @@ func TestAuthInterceptor_InvalidToken(t *testing.T) {
 func TestAuthInterceptor_ValidToken(t *testing.T) {
 	t.Parallel()
 
-	interceptor := grpcmw.AuthInterceptor(testSecret)
+	jwtManager := pkgjwt.New(testSecret, time.Hour)
+	interceptor := grpcmw.AuthInterceptor(jwtManager)
 	info := &grpc.UnaryServerInfo{FullMethod: "/grpc.v1.TaskService/GetTask"}
 
 	token := genToken(t)
 
-	md := metadata.Pairs("authorization", token)
+	md := metadata.Pairs("authorization", "Bearer "+token)
 	ctx := metadata.NewIncomingContext(t.Context(), md)
 
 	capture := &ctxCapture{}
@@ -158,20 +162,21 @@ func TestAuthInterceptor_ValidToken(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, respOK, resp)
 
-	claims, ok := grpcmw.ClaimsFromContext(capture.ctx)
+	userID, ok := grpcmw.UserIDFromContext(capture.ctx)
 	assert.True(t, ok)
-	assert.Equal(t, testUserID, claims.UserID)
+	assert.Equal(t, testUserID, userID)
 }
 
-func TestClaimsFromContext_WithValue(t *testing.T) {
+func TestUserIDFromContext_WithValue(t *testing.T) {
 	t.Parallel()
 
-	interceptor := grpcmw.AuthInterceptor(testSecret)
+	jwtManager := pkgjwt.New(testSecret, time.Hour)
+	interceptor := grpcmw.AuthInterceptor(jwtManager)
 	info := &grpc.UnaryServerInfo{FullMethod: "/grpc.v1.TaskService/GetTask"}
 
 	token := genToken(t)
 
-	md := metadata.Pairs("authorization", token)
+	md := metadata.Pairs("authorization", "Bearer "+token)
 	ctx := metadata.NewIncomingContext(t.Context(), md)
 
 	capture := &ctxCapture{}
@@ -179,15 +184,15 @@ func TestClaimsFromContext_WithValue(t *testing.T) {
 	_, err := interceptor(ctx, nil, info, capture.capturingHandler)
 	require.NoError(t, err)
 
-	claims, ok := grpcmw.ClaimsFromContext(capture.ctx)
+	userID, ok := grpcmw.UserIDFromContext(capture.ctx)
 	assert.True(t, ok)
-	assert.Equal(t, testUserID, claims.UserID)
+	assert.Equal(t, testUserID, userID)
 }
 
-func TestClaimsFromContext_WithoutValue(t *testing.T) {
+func TestUserIDFromContext_WithoutValue(t *testing.T) {
 	t.Parallel()
 
-	claims, ok := grpcmw.ClaimsFromContext(t.Context())
+	userID, ok := grpcmw.UserIDFromContext(t.Context())
 	assert.False(t, ok)
-	assert.Nil(t, claims)
+	assert.Empty(t, userID)
 }

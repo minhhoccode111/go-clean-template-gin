@@ -6,6 +6,7 @@ import (
 
 	translator "github.com/Conight/go-googletrans"
 	"github.com/minhhoccode111/go-clean-template-gin/internal/entity"
+	"github.com/minhhoccode111/go-clean-template-gin/internal/repo"
 )
 
 // TranslationWebAPI -.
@@ -13,16 +14,16 @@ type TranslationWebAPI struct {
 	conf translator.Config
 }
 
-// New -.
-func New() *TranslationWebAPI {
+// New returns a TranslationWebAPI instrumented with OpenTelemetry tracing spans.
+func New() repo.TranslationWebAPI {
 	conf := translator.Config{
 		UserAgent:   []string{"Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:15.0) Gecko/20100101 Firefox/15.0.1"},
 		ServiceUrls: []string{"translate.google.com"},
 	}
 
-	return &TranslationWebAPI{
+	return newTraced(&TranslationWebAPI{
 		conf: conf,
-	}
+	})
 }
 
 // Translate -.
