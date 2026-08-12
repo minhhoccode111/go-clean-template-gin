@@ -8,14 +8,14 @@ SELECT id, user_id, title, description, status, created_at, updated_at FROM task
 -- name: ListTasks :many
 SELECT id, user_id, title, description, status, created_at, updated_at FROM tasks
 WHERE user_id = $1
-  AND ($2::varchar IS NULL OR status = $2)
+  AND ($2::varchar = '' OR status = $2)
 ORDER BY created_at DESC
 LIMIT $3 OFFSET $4;
 
 -- name: CountTasks :one
 SELECT COUNT(*) FROM tasks
 WHERE user_id = $1
-  AND ($2::varchar IS NULL OR status = $2);
+  AND ($2::varchar = '' OR status = $2);
 
 -- name: UpdateTask :execrows
 UPDATE tasks SET title = $1, description = $2, status = $3, updated_at = $4
