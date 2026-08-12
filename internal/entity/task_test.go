@@ -3,12 +3,14 @@ package entity
 import "testing"
 
 func TestTask_Transition(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
-		name     string
-		initial  TaskStatus
-		new      TaskStatus
-		wantErr  bool
-		wantS    TaskStatus
+		name    string
+		initial TaskStatus
+		new     TaskStatus
+		wantErr bool
+		wantS   TaskStatus
 	}{
 		{"todo to in_progress", TaskStatusTodo, TaskStatusInProgress, false, TaskStatusInProgress},
 		{"todo to done", TaskStatusTodo, TaskStatusDone, true, TaskStatusTodo},
@@ -20,6 +22,8 @@ func TestTask_Transition(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			task := &Task{Status: tt.initial}
 
 			err := task.Transition(tt.new)

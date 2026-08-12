@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"github.com/minhhoccode111/go-clean-template-gin/config"
-	_ "github.com/minhhoccode111/go-clean-template-gin/docs"
+	_ "github.com/minhhoccode111/go-clean-template-gin/docs" // registers swagger API info
 	"github.com/minhhoccode111/go-clean-template-gin/internal/controller/restapi/middleware"
 	v1 "github.com/minhhoccode111/go-clean-template-gin/internal/controller/restapi/v1"
 	"github.com/minhhoccode111/go-clean-template-gin/internal/usecase"

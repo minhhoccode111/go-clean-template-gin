@@ -14,7 +14,7 @@ import (
 const countTasks = `-- name: CountTasks :one
 SELECT COUNT(*) FROM tasks
 WHERE user_id = $1
-  AND ($2::varchar IS NULL OR status = $2)
+  AND ($2::varchar = '' OR status = $2)
 `
 
 type CountTasksParams struct {
@@ -96,7 +96,7 @@ func (q *Queries) GetTaskByID(ctx context.Context, id string) (Task, error) {
 const listTasks = `-- name: ListTasks :many
 SELECT id, user_id, title, description, status, created_at, updated_at FROM tasks
 WHERE user_id = $1
-  AND ($2::varchar IS NULL OR status = $2)
+  AND ($2::varchar = '' OR status = $2)
 ORDER BY created_at DESC
 LIMIT $3 OFFSET $4
 `
