@@ -8,6 +8,13 @@ import (
 	"github.com/rs/zerolog"
 )
 
+const (
+	levelError = "error"
+	levelWarn  = "warn"
+	levelInfo  = "info"
+	levelDebug = "debug"
+)
+
 // Interface -.
 type Interface interface {
 	Debug(message any, args ...any)
@@ -29,13 +36,13 @@ func New(level string) *Logger {
 	var l zerolog.Level
 
 	switch strings.ToLower(level) {
-	case "error":
+	case levelError:
 		l = zerolog.ErrorLevel
-	case "warn":
+	case levelWarn:
 		l = zerolog.WarnLevel
-	case "info":
+	case levelInfo:
 		l = zerolog.InfoLevel
-	case "debug":
+	case levelDebug:
 		l = zerolog.DebugLevel
 	default:
 		l = zerolog.InfoLevel

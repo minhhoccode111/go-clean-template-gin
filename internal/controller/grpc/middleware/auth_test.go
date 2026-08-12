@@ -16,9 +16,10 @@ import (
 )
 
 const (
-	respOK       = "ok"
-	testSecret   = "test-secret"
-	testUserID   = "42"
+	respOK          = "ok"
+	testSecret      = "test-secret"
+	testUserID      = "42"
+	grpcGetTaskPath = "/grpc.v1.TaskService/GetTask"
 )
 
 type ctxCapture struct {
@@ -82,7 +83,7 @@ func TestAuthInterceptor_MissingMetadata(t *testing.T) {
 
 	jwtManager := pkgjwt.New(testSecret, time.Hour)
 	interceptor := grpcmw.AuthInterceptor(jwtManager)
-	info := &grpc.UnaryServerInfo{FullMethod: "/grpc.v1.TaskService/GetTask"}
+	info := &grpc.UnaryServerInfo{FullMethod: grpcGetTaskPath}
 
 	capture := &ctxCapture{}
 
@@ -102,7 +103,7 @@ func TestAuthInterceptor_MissingAuthorizationToken(t *testing.T) {
 
 	jwtManager := pkgjwt.New(testSecret, time.Hour)
 	interceptor := grpcmw.AuthInterceptor(jwtManager)
-	info := &grpc.UnaryServerInfo{FullMethod: "/grpc.v1.TaskService/GetTask"}
+	info := &grpc.UnaryServerInfo{FullMethod: grpcGetTaskPath}
 
 	md := metadata.New(map[string]string{"other-key": "value"})
 	ctx := metadata.NewIncomingContext(t.Context(), md)
@@ -125,7 +126,7 @@ func TestAuthInterceptor_InvalidToken(t *testing.T) {
 
 	jwtManager := pkgjwt.New(testSecret, time.Hour)
 	interceptor := grpcmw.AuthInterceptor(jwtManager)
-	info := &grpc.UnaryServerInfo{FullMethod: "/grpc.v1.TaskService/GetTask"}
+	info := &grpc.UnaryServerInfo{FullMethod: grpcGetTaskPath}
 
 	md := metadata.Pairs("authorization", "Bearer invalid-token")
 	ctx := metadata.NewIncomingContext(t.Context(), md)
@@ -148,7 +149,7 @@ func TestAuthInterceptor_ValidToken(t *testing.T) {
 
 	jwtManager := pkgjwt.New(testSecret, time.Hour)
 	interceptor := grpcmw.AuthInterceptor(jwtManager)
-	info := &grpc.UnaryServerInfo{FullMethod: "/grpc.v1.TaskService/GetTask"}
+	info := &grpc.UnaryServerInfo{FullMethod: grpcGetTaskPath}
 
 	token := genToken(t)
 
@@ -172,7 +173,7 @@ func TestUserIDFromContext_WithValue(t *testing.T) {
 
 	jwtManager := pkgjwt.New(testSecret, time.Hour)
 	interceptor := grpcmw.AuthInterceptor(jwtManager)
-	info := &grpc.UnaryServerInfo{FullMethod: "/grpc.v1.TaskService/GetTask"}
+	info := &grpc.UnaryServerInfo{FullMethod: grpcGetTaskPath}
 
 	token := genToken(t)
 

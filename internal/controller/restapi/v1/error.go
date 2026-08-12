@@ -8,3 +8,14 @@ import (
 func errorResponse(c *gin.Context, code int, msg string) {
 	c.AbortWithStatusJSON(code, response.Error{Error: msg})
 }
+
+func userIDFromContext(c *gin.Context) (string, bool) {
+	v, ok := c.Get("userID")
+	if !ok {
+		return "", false
+	}
+
+	userID, ok := v.(string)
+
+	return userID, ok
+}

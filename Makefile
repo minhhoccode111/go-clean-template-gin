@@ -51,7 +51,7 @@ compose-down: ### Down docker compose
 .PHONY: compose-down
 
 swag-v1: ### swag init
-	swag init -g internal/controller/restapi/router.go
+	swag init -g internal/controller/restapi/router.go --exclude ./internal/controller/amqp_rpc,./internal/controller/nats_rpc
 .PHONY: swag-v1
 
 sqlc: ### generate source files from sql

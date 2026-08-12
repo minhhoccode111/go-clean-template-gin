@@ -10,6 +10,29 @@
  * ---------------------------------------------------------------
  */
 
+export enum EntityTaskStatus {
+  TaskStatusTodo = "todo",
+  TaskStatusInProgress = "in_progress",
+  TaskStatusDone = "done",
+}
+
+export interface EntityTask {
+  /** @example "2026-01-01T00:00:00Z" */
+  created_at?: string;
+  /** @example "Task description" */
+  description?: string;
+  /** @example "550e8400-e29b-41d4-a716-446655440000" */
+  id?: string;
+  /** @example "todo" */
+  status?: EntityTaskStatus;
+  /** @example "My task" */
+  title?: string;
+  /** @example "2026-01-01T00:00:00Z" */
+  updated_at?: string;
+  /** @example "550e8400-e29b-41d4-a716-446655440000" */
+  user_id?: string;
+}
+
 export interface EntityTranslation {
   /** @example "en" */
   destination?: string;
@@ -25,7 +48,77 @@ export interface EntityTranslationHistory {
   history?: EntityTranslation[];
 }
 
-export interface RequestTranslate {
+export interface EntityUser {
+  /** @example "2026-01-01T00:00:00Z" */
+  created_at?: string;
+  /** @example "john@example.com" */
+  email?: string;
+  /** @example "550e8400-e29b-41d4-a716-446655440000" */
+  id?: string;
+  /** @example "2026-01-01T00:00:00Z" */
+  updated_at?: string;
+  /** @example "johndoe" */
+  username?: string;
+}
+
+export interface V1CreateTask {
+  /**
+   * @maxLength 1000
+   * @example "Task description"
+   */
+  description?: string;
+  /**
+   * @maxLength 255
+   * @example "My task"
+   */
+  title: string;
+}
+
+export interface V1Error {
+  /** @example "message" */
+  error?: string;
+}
+
+export interface V1Login {
+  /** @example "john@example.com" */
+  email: string;
+  /** @example "secret123" */
+  password: string;
+}
+
+export interface V1Register {
+  /** @example "john@example.com" */
+  email: string;
+  /**
+   * @minLength 6
+   * @example "secret123"
+   */
+  password: string;
+  /**
+   * @minLength 3
+   * @maxLength 255
+   * @example "johndoe"
+   */
+  username: string;
+}
+
+export interface V1TaskList {
+  tasks?: EntityTask[];
+  /** @example 42 */
+  total?: number;
+}
+
+export interface V1Token {
+  /** @example "eyJhbGciOiJIUzI1NiIs..." */
+  token?: string;
+}
+
+export interface V1TransitionTask {
+  /** @example "in_progress" */
+  status: "todo" | "in_progress" | "done";
+}
+
+export interface V1Translate {
   /** @example "en" */
   destination: string;
   /** @example "текст для перевода" */
@@ -34,9 +127,17 @@ export interface RequestTranslate {
   source: string;
 }
 
-export interface ResponseError {
-  /** @example "message" */
-  error?: string;
+export interface V1UpdateTask {
+  /**
+   * @maxLength 1000
+   * @example "Updated description"
+   */
+  description?: string;
+  /**
+   * @maxLength 255
+   * @example "Updated task"
+   */
+  title: string;
 }
 
 export type QueryParamsType = Record<string | number, any>;
@@ -300,23 +401,23 @@ export class HttpClient<SecurityDataType = unknown> {
  * @baseUrl //localhost:8080/v1
  * @contact
  *
- * Using a translation service as an example
+ * Multi-domain clean architecture template with translation, user, and task management
  */
 export class Api<
   SecurityDataType extends unknown,
 > extends HttpClient<SecurityDataType> {
-  translation = {
+  auth = {
     /**
-     * @description Translate a text
+     * @description Authenticate user and get JWT token
      *
-     * @tags translation
-     * @name DoTranslate
-     * @summary Translate
-     * @request POST:/translation/do-translate
+     * @tags auth
+     * @name Login
+     * @summary Login
+     * @request POST:/auth/login
      */
-    doTranslate: (request: RequestTranslate, params: RequestParams = {}) =>
-      this.request<EntityTranslation, ResponseError>({
-        path: `/translation/do-translate`,
+    login: (request: V1Login, params: RequestParams = {}) =>
+      this.request<V1Token, V1Error>({
+        path: `/auth/login`,
         method: "POST",
         body: request,
         type: ContentType.Json,
@@ -325,18 +426,216 @@ export class Api<
       }),
 
     /**
-     * @description Show all translation history
+     * @description Register a new user
+     *
+     * @tags auth
+     * @name Register
+     * @summary Register
+     * @request POST:/auth/register
+     */
+    register: (request: V1Register, params: RequestParams = {}) =>
+      this.request<EntityUser, V1Error>({
+        path: `/auth/register`,
+        method: "POST",
+        body: request,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+  };
+  tasks = {
+    /**
+     * @description List tasks for the current user with optional filtering
+     *
+     * @tags tasks
+     * @name ListTasks
+     * @summary List tasks
+     * @request GET:/tasks
+     * @secure
+     */
+    listTasks: (
+      query?: {
+        /** Filter by status */
+        status?: "todo" | "in_progress" | "done";
+        /**
+         * Limit
+         * @default 10
+         */
+        limit?: number;
+        /**
+         * Offset
+         * @default 0
+         */
+        offset?: number;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<V1TaskList, V1Error>({
+        path: `/tasks`,
+        method: "GET",
+        query: query,
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Create a new task for the current user
+     *
+     * @tags tasks
+     * @name CreateTask
+     * @summary Create task
+     * @request POST:/tasks
+     * @secure
+     */
+    createTask: (request: V1CreateTask, params: RequestParams = {}) =>
+      this.request<EntityTask, V1Error>({
+        path: `/tasks`,
+        method: "POST",
+        body: request,
+        secure: true,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Delete a task by ID
+     *
+     * @tags tasks
+     * @name DeleteTask
+     * @summary Delete task
+     * @request DELETE:/tasks/{id}
+     * @secure
+     */
+    deleteTask: (id: string, params: RequestParams = {}) =>
+      this.request<void, V1Error>({
+        path: `/tasks/${id}`,
+        method: "DELETE",
+        secure: true,
+        ...params,
+      }),
+
+    /**
+     * @description Get a task by ID
+     *
+     * @tags tasks
+     * @name GetTask
+     * @summary Get task
+     * @request GET:/tasks/{id}
+     * @secure
+     */
+    getTask: (id: string, params: RequestParams = {}) =>
+      this.request<EntityTask, V1Error>({
+        path: `/tasks/${id}`,
+        method: "GET",
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Update task title and description
+     *
+     * @tags tasks
+     * @name UpdateTask
+     * @summary Update task
+     * @request PUT:/tasks/{id}
+     * @secure
+     */
+    updateTask: (
+      id: string,
+      request: V1UpdateTask,
+      params: RequestParams = {},
+    ) =>
+      this.request<EntityTask, V1Error>({
+        path: `/tasks/${id}`,
+        method: "PUT",
+        body: request,
+        secure: true,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Change task status (todo -> in_progress -> done, or in_progress -> todo)
+     *
+     * @tags tasks
+     * @name TransitionTask
+     * @summary Transition task status
+     * @request PATCH:/tasks/{id}/status
+     * @secure
+     */
+    transitionTask: (
+      id: string,
+      request: V1TransitionTask,
+      params: RequestParams = {},
+    ) =>
+      this.request<EntityTask, V1Error>({
+        path: `/tasks/${id}/status`,
+        method: "PATCH",
+        body: request,
+        secure: true,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+  };
+  translation = {
+    /**
+     * @description Translate a text
+     *
+     * @tags translation
+     * @name DoTranslate
+     * @summary Translate
+     * @request POST:/translation/do-translate
+     * @secure
+     */
+    doTranslate: (request: V1Translate, params: RequestParams = {}) =>
+      this.request<EntityTranslation, V1Error>({
+        path: `/translation/do-translate`,
+        method: "POST",
+        body: request,
+        secure: true,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Show all translation history for current user
      *
      * @tags translation
      * @name History
      * @summary Show history
      * @request GET:/translation/history
+     * @secure
      */
     history: (params: RequestParams = {}) =>
-      this.request<EntityTranslationHistory, ResponseError>({
+      this.request<EntityTranslationHistory, V1Error>({
         path: `/translation/history`,
         method: "GET",
-        type: ContentType.Json,
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+  };
+  user = {
+    /**
+     * @description Get current user profile
+     *
+     * @tags user
+     * @name Profile
+     * @summary Get profile
+     * @request GET:/user/profile
+     * @secure
+     */
+    profile: (params: RequestParams = {}) =>
+      this.request<EntityUser, V1Error>({
+        path: `/user/profile`,
+        method: "GET",
+        secure: true,
         format: "json",
         ...params,
       }),

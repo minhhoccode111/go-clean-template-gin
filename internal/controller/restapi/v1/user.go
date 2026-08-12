@@ -116,14 +116,14 @@ func (r *V1) login(c *gin.Context) {
 // @Security    BearerAuth
 // @Router      /user/profile [get]
 func (r *V1) profile(c *gin.Context) {
-	userID, ok := c.Get("userID")
+	userID, ok := userIDFromContext(c)
 	if !ok {
 		errorResponse(c, http.StatusUnauthorized, "unauthorized")
 
 		return
 	}
 
-	user, err := r.u.GetUser(c.Request.Context(), userID.(string))
+	user, err := r.u.GetUser(c.Request.Context(), userID)
 	if err != nil {
 		r.l.Error(err, "restapi - v1 - profile")
 

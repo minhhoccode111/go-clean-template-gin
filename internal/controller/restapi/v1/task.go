@@ -25,7 +25,7 @@ import (
 // @Security    BearerAuth
 // @Router      /tasks [post]
 func (r *V1) createTask(c *gin.Context) {
-	userID, ok := c.Get("userID")
+	userID, ok := userIDFromContext(c)
 	if !ok {
 		errorResponse(c, http.StatusUnauthorized, "unauthorized")
 
@@ -48,7 +48,7 @@ func (r *V1) createTask(c *gin.Context) {
 		return
 	}
 
-	task, err := r.tk.Create(c.Request.Context(), userID.(string), body.Title, body.Description)
+	task, err := r.tk.Create(c.Request.Context(), userID, body.Title, body.Description)
 	if err != nil {
 		r.l.Error(err, "restapi - v1 - createTask")
 		errorResponse(c, http.StatusInternalServerError, "internal server error")
@@ -73,7 +73,7 @@ func (r *V1) createTask(c *gin.Context) {
 // @Security    BearerAuth
 // @Router      /tasks [get]
 func (r *V1) listTasks(c *gin.Context) {
-	userID, ok := c.Get("userID")
+	userID, ok := userIDFromContext(c)
 	if !ok {
 		errorResponse(c, http.StatusUnauthorized, "unauthorized")
 
@@ -103,7 +103,7 @@ func (r *V1) listTasks(c *gin.Context) {
 		offset = 0
 	}
 
-	tasks, total, err := r.tk.List(c.Request.Context(), userID.(string), status, limit, offset)
+	tasks, total, err := r.tk.List(c.Request.Context(), userID, status, limit, offset)
 	if err != nil {
 		r.l.Error(err, "restapi - v1 - listTasks")
 		errorResponse(c, http.StatusInternalServerError, "internal server error")
@@ -131,7 +131,7 @@ func (r *V1) listTasks(c *gin.Context) {
 // @Security    BearerAuth
 // @Router      /tasks/{id} [get]
 func (r *V1) getTask(c *gin.Context) {
-	userID, ok := c.Get("userID")
+	userID, ok := userIDFromContext(c)
 	if !ok {
 		errorResponse(c, http.StatusUnauthorized, "unauthorized")
 
@@ -140,7 +140,7 @@ func (r *V1) getTask(c *gin.Context) {
 
 	taskID := c.Param("id")
 
-	task, err := r.tk.Get(c.Request.Context(), userID.(string), taskID)
+	task, err := r.tk.Get(c.Request.Context(), userID, taskID)
 	if err != nil {
 		r.l.Error(err, "restapi - v1 - getTask")
 
@@ -181,7 +181,7 @@ func (r *V1) getTask(c *gin.Context) {
 // @Security    BearerAuth
 // @Router      /tasks/{id} [put]
 func (r *V1) updateTask(c *gin.Context) {
-	userID, ok := c.Get("userID")
+	userID, ok := userIDFromContext(c)
 	if !ok {
 		errorResponse(c, http.StatusUnauthorized, "unauthorized")
 
@@ -206,7 +206,7 @@ func (r *V1) updateTask(c *gin.Context) {
 		return
 	}
 
-	task, err := r.tk.Update(c.Request.Context(), userID.(string), taskID, body.Title, body.Description)
+	task, err := r.tk.Update(c.Request.Context(), userID, taskID, body.Title, body.Description)
 	if err != nil {
 		r.l.Error(err, "restapi - v1 - updateTask")
 
@@ -247,7 +247,7 @@ func (r *V1) updateTask(c *gin.Context) {
 // @Security    BearerAuth
 // @Router      /tasks/{id}/status [patch]
 func (r *V1) transitionTask(c *gin.Context) {
-	userID, ok := c.Get("userID")
+	userID, ok := userIDFromContext(c)
 	if !ok {
 		errorResponse(c, http.StatusUnauthorized, "unauthorized")
 
@@ -272,7 +272,7 @@ func (r *V1) transitionTask(c *gin.Context) {
 		return
 	}
 
-	task, err := r.tk.Transition(c.Request.Context(), userID.(string), taskID, body.Status)
+	task, err := r.tk.Transition(c.Request.Context(), userID, taskID, body.Status)
 	if err != nil {
 		r.l.Error(err, "restapi - v1 - transitionTask")
 
@@ -314,7 +314,7 @@ func (r *V1) transitionTask(c *gin.Context) {
 // @Security    BearerAuth
 // @Router      /tasks/{id} [delete]
 func (r *V1) deleteTask(c *gin.Context) {
-	userID, ok := c.Get("userID")
+	userID, ok := userIDFromContext(c)
 	if !ok {
 		errorResponse(c, http.StatusUnauthorized, "unauthorized")
 
@@ -323,7 +323,7 @@ func (r *V1) deleteTask(c *gin.Context) {
 
 	taskID := c.Param("id")
 
-	err := r.tk.Delete(c.Request.Context(), userID.(string), taskID)
+	err := r.tk.Delete(c.Request.Context(), userID, taskID)
 	if err != nil {
 		r.l.Error(err, "restapi - v1 - deleteTask")
 

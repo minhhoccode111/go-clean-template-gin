@@ -9,6 +9,13 @@ import (
 
 // ---- no_dups_str ------------------------------------------------------------
 
+const (
+	testTagGo  = "go"
+	testEmail  = "a@b.com"
+	testUser   = "validuser"
+	testPassOK = "P@ssw0rd"
+)
+
 func TestNoDupsStr(t *testing.T) {
 	t.Parallel()
 
@@ -23,10 +30,10 @@ func TestNoDupsStr(t *testing.T) {
 		input []string
 		valid bool
 	}{
-		{"unique values", []string{"go", "rust", "python"}, true},
-		{"duplicate values", []string{"go", "go"}, false},
-		{"trimmed duplicates", []string{"go", " go"}, false}, // " go" trimmed == "go"
-		{"single element", []string{"go"}, true},
+		{"unique values", []string{testTagGo, "rust", "python"}, true},
+		{"duplicate values", []string{testTagGo, testTagGo}, false},
+		{"trimmed duplicates", []string{testTagGo, " go"}, false}, // " go" trimmed == "go"
+		{"single element", []string{testTagGo}, true},
 		{"empty slice", []string{}, true},
 	}
 
@@ -38,7 +45,13 @@ func TestNoDupsStr(t *testing.T) {
 
 			got := err == nil
 			if got != tc.valid {
-				t.Errorf("no_dups_str(%v): want valid=%v, got valid=%v (err: %v)", tc.input, tc.valid, got, err)
+				t.Errorf(
+					"no_dups_str(%v): want valid=%v, got valid=%v (err: %v)",
+					tc.input,
+					tc.valid,
+					got,
+					err,
+				)
 			}
 		})
 	}
@@ -80,7 +93,13 @@ func TestTag(t *testing.T) {
 
 			got := err == nil
 			if got != tc.valid {
-				t.Errorf("tag(%q): want valid=%v, got valid=%v (err: %v)", tc.input, tc.valid, got, err)
+				t.Errorf(
+					"tag(%q): want valid=%v, got valid=%v (err: %v)",
+					tc.input,
+					tc.valid,
+					got,
+					err,
+				)
 			}
 		})
 	}
@@ -107,8 +126,8 @@ func TestUsername(t *testing.T) {
 		{"digits only", "12345", true},
 		{"unicode letters", "Ψuser42", true},
 		{"with space", "john doe", false},
-		{"with hyphen", "john-doe", false},
-		{"with underscore", "john_doe", false},
+		{"hyphen", "john-doe", false},
+		{"underscore", "john_doe", false},
 		{"with special char", "john@doe", false},
 	}
 
@@ -120,7 +139,13 @@ func TestUsername(t *testing.T) {
 
 			got := err == nil
 			if got != tc.valid {
-				t.Errorf("username(%q): want valid=%v, got valid=%v (err: %v)", tc.input, tc.valid, got, err)
+				t.Errorf(
+					"username(%q): want valid=%v, got valid=%v (err: %v)",
+					tc.input,
+					tc.valid,
+					got,
+					err,
+				)
 			}
 		})
 	}
@@ -142,7 +167,7 @@ func TestPassword(t *testing.T) {
 		input string
 		valid bool
 	}{
-		{"all requirements met", "P@ssw0rd", true},
+		{"all requirements met", testPassOK, true},
 		{"missing uppercase", "p@ssw0rd", false},
 		{"missing lowercase", "P@SSW0RD", false},
 		{"missing digit", "P@ssword", false},
@@ -159,7 +184,13 @@ func TestPassword(t *testing.T) {
 
 			got := err == nil
 			if got != tc.valid {
-				t.Errorf("password(%q): want valid=%v, got valid=%v (err: %v)", tc.input, tc.valid, got, err)
+				t.Errorf(
+					"password(%q): want valid=%v, got valid=%v (err: %v)",
+					tc.input,
+					tc.valid,
+					got,
+					err,
+				)
 			}
 		})
 	}
@@ -170,7 +201,7 @@ func TestPassword(t *testing.T) {
 type extractErrorsPayload struct {
 	Email    string   `validate:"required,email"`
 	Username string   `validate:"required,min=2,max=50,username"`
-	Password string   `validate:"required,min=8,max=50,password"` //nolint:gosec // test struct, not a real credential store
+	Password string   `validate:"required,min=8,max=50,password"`
 	Tags     []string `validate:"no_dups_str"`
 }
 
@@ -191,27 +222,32 @@ func extractErrorsCases() []struct {
 		},
 		{
 			"invalid email",
-			extractErrorsPayload{Email: "not-an-email", Username: "validuser", Password: "P@ssw0rd"},
+			extractErrorsPayload{Email: "not-an-email", Username: testUser, Password: testPassOK},
 			"must be a valid email address",
 		},
 		{
 			"username too short",
-			extractErrorsPayload{Email: "a@b.com", Username: "x", Password: "P@ssw0rd"},
+			extractErrorsPayload{Email: testEmail, Username: "x", Password: testPassOK},
 			"must be at least",
 		},
 		{
 			"invalid username characters",
-			extractErrorsPayload{Email: "a@b.com", Username: "bad user!", Password: "P@ssw0rd"},
+			extractErrorsPayload{Email: testEmail, Username: "bad user!", Password: testPassOK},
 			"must contain only letters",
 		},
 		{
 			"weak password",
-			extractErrorsPayload{Email: "a@b.com", Username: "validuser", Password: "weakpass"},
+			extractErrorsPayload{Email: testEmail, Username: testUser, Password: "weakpass"},
 			"uppercase",
 		},
 		{
 			"duplicate tags",
-			extractErrorsPayload{Email: "a@b.com", Username: "validuser", Password: "P@ssw0rd", Tags: []string{"go", "go"}},
+			extractErrorsPayload{
+				Email:    testEmail,
+				Username: testUser,
+				Password: testPassOK,
+				Tags:     []string{testTagGo, testTagGo},
+			},
 			"contains duplicate values",
 		},
 	}
@@ -243,7 +279,11 @@ func TestExtractErrors(t *testing.T) {
 			}
 
 			if !found {
-				t.Errorf("ExtractErrors: want a message containing %q, got %v", tc.wantMessage, msgs)
+				t.Errorf(
+					"ExtractErrors: want a message containing %q, got %v",
+					tc.wantMessage,
+					msgs,
+				)
 			}
 		})
 	}
