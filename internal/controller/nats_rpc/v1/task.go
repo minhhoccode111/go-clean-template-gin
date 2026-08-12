@@ -5,60 +5,31 @@ import (
 	"fmt"
 
 	"github.com/goccy/go-json"
+	"github.com/minhhoccode111/go-clean-template-gin/internal/controller/nats_rpc/v1/request"
+	"github.com/minhhoccode111/go-clean-template-gin/internal/controller/nats_rpc/v1/response"
 	"github.com/minhhoccode111/go-clean-template-gin/internal/entity"
 	"github.com/minhhoccode111/go-clean-template-gin/pkg/nats/nats_rpc/server"
 	"github.com/nats-io/nats.go"
 )
 
-type natsTaskCreateData struct {
-	Title       string `json:"title"`
-	Description string `json:"description"`
-}
-
-type natsTaskGetData struct {
-	ID string `json:"id"`
-}
-
-type natsTaskListData struct {
-	Status string `json:"status"`
-	Limit  int    `json:"limit"`
-	Offset int    `json:"offset"`
-}
-
-type natsTaskUpdateData struct {
-	ID          string `json:"id"`
-	Title       string `json:"title"`
-	Description string `json:"description"`
-}
-
-type natsTaskTransitionData struct {
-	ID     string `json:"id"`
-	Status string `json:"status"`
-}
-
-type natsTaskDeleteData struct {
-	ID string `json:"id"`
-}
-
 func (r *V1) createTask() server.CallHandler {
 	return func(msg *nats.Msg) (any, error) {
-		var req struct {
-			Token string             `json:"token"`
-			Data  natsTaskCreateData `json:"data"`
+		userID, rawData, err := extractUserID(msg, r.j)
+		if err != nil {
+			r.l.Error(err, "nats_rpc - V1 - createTask")
+
+			return nil, fmt.Errorf("nats_rpc - V1 - createTask - extractUserID: %w", err)
 		}
 
-		if err := json.Unmarshal(msg.Data, &req); err != nil {
+		var reqData request.CreateTask
+
+		if err := json.Unmarshal(rawData, &reqData); err != nil {
 			r.l.Error(err, "nats_rpc - V1 - createTask")
 
 			return nil, fmt.Errorf("nats_rpc - V1 - createTask - json.Unmarshal: %w", err)
 		}
 
-		userID, err := r.j.ParseToken(req.Token)
-		if err != nil {
-			return nil, fmt.Errorf("nats_rpc - V1 - createTask - invalid token: %w", err)
-		}
-
-		task, err := r.tk.Create(context.Background(), userID, req.Data.Title, req.Data.Description)
+		task, err := r.tk.Create(context.Background(), userID, reqData.Title, reqData.Description)
 		if err != nil {
 			r.l.Error(err, "nats_rpc - V1 - createTask")
 
@@ -71,23 +42,22 @@ func (r *V1) createTask() server.CallHandler {
 
 func (r *V1) getTask() server.CallHandler {
 	return func(msg *nats.Msg) (any, error) {
-		var req struct {
-			Token string          `json:"token"`
-			Data  natsTaskGetData `json:"data"`
+		userID, rawData, err := extractUserID(msg, r.j)
+		if err != nil {
+			r.l.Error(err, "nats_rpc - V1 - getTask")
+
+			return nil, fmt.Errorf("nats_rpc - V1 - getTask - extractUserID: %w", err)
 		}
 
-		if err := json.Unmarshal(msg.Data, &req); err != nil {
+		var reqData request.GetTask
+
+		if err := json.Unmarshal(rawData, &reqData); err != nil {
 			r.l.Error(err, "nats_rpc - V1 - getTask")
 
 			return nil, fmt.Errorf("nats_rpc - V1 - getTask - json.Unmarshal: %w", err)
 		}
 
-		userID, err := r.j.ParseToken(req.Token)
-		if err != nil {
-			return nil, fmt.Errorf("nats_rpc - V1 - getTask - invalid token: %w", err)
-		}
-
-		task, err := r.tk.Get(context.Background(), userID, req.Data.ID)
+		task, err := r.tk.Get(context.Background(), userID, reqData.ID)
 		if err != nil {
 			r.l.Error(err, "nats_rpc - V1 - getTask")
 
@@ -100,59 +70,57 @@ func (r *V1) getTask() server.CallHandler {
 
 func (r *V1) listTasks() server.CallHandler {
 	return func(msg *nats.Msg) (any, error) {
-		var req struct {
-			Token string           `json:"token"`
-			Data  natsTaskListData `json:"data"`
+		userID, rawData, err := extractUserID(msg, r.j)
+		if err != nil {
+			r.l.Error(err, "nats_rpc - V1 - listTasks")
+
+			return nil, fmt.Errorf("nats_rpc - V1 - listTasks - extractUserID: %w", err)
 		}
 
-		if err := json.Unmarshal(msg.Data, &req); err != nil {
+		var reqData request.ListTasks
+
+		if err := json.Unmarshal(rawData, &reqData); err != nil {
 			r.l.Error(err, "nats_rpc - V1 - listTasks")
 
 			return nil, fmt.Errorf("nats_rpc - V1 - listTasks - json.Unmarshal: %w", err)
 		}
 
-		userID, err := r.j.ParseToken(req.Token)
-		if err != nil {
-			return nil, fmt.Errorf("nats_rpc - V1 - listTasks - invalid token: %w", err)
-		}
-
 		var status *entity.TaskStatus
 
-		if req.Data.Status != "" {
-			s := entity.TaskStatus(req.Data.Status)
+		if reqData.Status != "" {
+			s := entity.TaskStatus(reqData.Status)
 			status = &s
 		}
 
-		tasks, total, err := r.tk.List(context.Background(), userID, status, req.Data.Limit, req.Data.Offset)
+		tasks, total, err := r.tk.List(context.Background(), userID, status, reqData.Limit, reqData.Offset)
 		if err != nil {
 			r.l.Error(err, "nats_rpc - V1 - listTasks")
 
 			return nil, fmt.Errorf("nats_rpc - V1 - listTasks: %w", err)
 		}
 
-		return map[string]any{"tasks": tasks, "total": total}, nil
+		return response.TaskList{Tasks: tasks, Total: total}, nil
 	}
 }
 
 func (r *V1) updateTask() server.CallHandler {
 	return func(msg *nats.Msg) (any, error) {
-		var req struct {
-			Token string             `json:"token"`
-			Data  natsTaskUpdateData `json:"data"`
+		userID, rawData, err := extractUserID(msg, r.j)
+		if err != nil {
+			r.l.Error(err, "nats_rpc - V1 - updateTask")
+
+			return nil, fmt.Errorf("nats_rpc - V1 - updateTask - extractUserID: %w", err)
 		}
 
-		if err := json.Unmarshal(msg.Data, &req); err != nil {
+		var reqData request.UpdateTask
+
+		if err := json.Unmarshal(rawData, &reqData); err != nil {
 			r.l.Error(err, "nats_rpc - V1 - updateTask")
 
 			return nil, fmt.Errorf("nats_rpc - V1 - updateTask - json.Unmarshal: %w", err)
 		}
 
-		userID, err := r.j.ParseToken(req.Token)
-		if err != nil {
-			return nil, fmt.Errorf("nats_rpc - V1 - updateTask - invalid token: %w", err)
-		}
-
-		task, err := r.tk.Update(context.Background(), userID, req.Data.ID, req.Data.Title, req.Data.Description)
+		task, err := r.tk.Update(context.Background(), userID, reqData.ID, reqData.Title, reqData.Description)
 		if err != nil {
 			r.l.Error(err, "nats_rpc - V1 - updateTask")
 
@@ -165,23 +133,22 @@ func (r *V1) updateTask() server.CallHandler {
 
 func (r *V1) transitionTask() server.CallHandler {
 	return func(msg *nats.Msg) (any, error) {
-		var req struct {
-			Token string                 `json:"token"`
-			Data  natsTaskTransitionData `json:"data"`
+		userID, rawData, err := extractUserID(msg, r.j)
+		if err != nil {
+			r.l.Error(err, "nats_rpc - V1 - transitionTask")
+
+			return nil, fmt.Errorf("nats_rpc - V1 - transitionTask - extractUserID: %w", err)
 		}
 
-		if err := json.Unmarshal(msg.Data, &req); err != nil {
+		var reqData request.TransitionTask
+
+		if err := json.Unmarshal(rawData, &reqData); err != nil {
 			r.l.Error(err, "nats_rpc - V1 - transitionTask")
 
 			return nil, fmt.Errorf("nats_rpc - V1 - transitionTask - json.Unmarshal: %w", err)
 		}
 
-		userID, err := r.j.ParseToken(req.Token)
-		if err != nil {
-			return nil, fmt.Errorf("nats_rpc - V1 - transitionTask - invalid token: %w", err)
-		}
-
-		task, err := r.tk.Transition(context.Background(), userID, req.Data.ID, entity.TaskStatus(req.Data.Status))
+		task, err := r.tk.Transition(context.Background(), userID, reqData.ID, entity.TaskStatus(reqData.Status))
 		if err != nil {
 			r.l.Error(err, "nats_rpc - V1 - transitionTask")
 
@@ -194,29 +161,28 @@ func (r *V1) transitionTask() server.CallHandler {
 
 func (r *V1) deleteTask() server.CallHandler {
 	return func(msg *nats.Msg) (any, error) {
-		var req struct {
-			Token string             `json:"token"`
-			Data  natsTaskDeleteData `json:"data"`
+		userID, rawData, err := extractUserID(msg, r.j)
+		if err != nil {
+			r.l.Error(err, "nats_rpc - V1 - deleteTask")
+
+			return nil, fmt.Errorf("nats_rpc - V1 - deleteTask - extractUserID: %w", err)
 		}
 
-		if err := json.Unmarshal(msg.Data, &req); err != nil {
+		var reqData request.DeleteTask
+
+		if err := json.Unmarshal(rawData, &reqData); err != nil {
 			r.l.Error(err, "nats_rpc - V1 - deleteTask")
 
 			return nil, fmt.Errorf("nats_rpc - V1 - deleteTask - json.Unmarshal: %w", err)
 		}
 
-		userID, err := r.j.ParseToken(req.Token)
-		if err != nil {
-			return nil, fmt.Errorf("nats_rpc - V1 - deleteTask - invalid token: %w", err)
-		}
-
-		err = r.tk.Delete(context.Background(), userID, req.Data.ID)
+		err = r.tk.Delete(context.Background(), userID, reqData.ID)
 		if err != nil {
 			r.l.Error(err, "nats_rpc - V1 - deleteTask")
 
 			return nil, fmt.Errorf("nats_rpc - V1 - deleteTask: %w", err)
 		}
 
-		return nil, nil
+		return response.DeleteStatus{Status: "deleted"}, nil
 	}
 }
