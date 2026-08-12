@@ -175,6 +175,7 @@ func Run(cfg *config.Config) {
 	if err != nil {
 		l.Fatal(fmt.Errorf("app - Run - tracing.New: %w", err))
 	}
+
 	defer func() {
 		if err := shutdownTracing(ctx); err != nil {
 			l.Error(fmt.Errorf("app - Run - shutdownTracing: %w", err))
