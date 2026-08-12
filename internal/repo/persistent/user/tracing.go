@@ -1,4 +1,4 @@
-package persistent
+package user
 
 import (
 	"context"
@@ -11,18 +11,18 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-const _tracerNameUser = "github.com/minhhoccode111/go-clean-template-gin/internal/repo/persistent/user"
+const _tracerName = "github.com/minhhoccode111/go-clean-template-gin/internal/repo/persistent/user"
 
-type tracedUserRepo struct {
+type tracedRepo struct {
 	next repo.UserRepo
 }
 
-func newTracedUser(next repo.UserRepo) repo.UserRepo {
-	return &tracedUserRepo{next: next}
+func newTraced(next repo.UserRepo) repo.UserRepo {
+	return &tracedRepo{next: next}
 }
 
-func (r *tracedUserRepo) Store(ctx context.Context, user *entity.User) error {
-	ctx, span := otel.Tracer(_tracerNameUser).Start(
+func (r *tracedRepo) Store(ctx context.Context, user *entity.User) error {
+	ctx, span := otel.Tracer(_tracerName).Start(
 		ctx, "UserRepo.Store",
 		trace.WithAttributes(
 			attribute.String("user.id", user.ID),
@@ -41,8 +41,8 @@ func (r *tracedUserRepo) Store(ctx context.Context, user *entity.User) error {
 	return err
 }
 
-func (r *tracedUserRepo) GetByID(ctx context.Context, id string) (entity.User, error) {
-	ctx, span := otel.Tracer(_tracerNameUser).Start(
+func (r *tracedRepo) GetByID(ctx context.Context, id string) (entity.User, error) {
+	ctx, span := otel.Tracer(_tracerName).Start(
 		ctx, "UserRepo.GetByID",
 		trace.WithAttributes(attribute.String("user.id", id)),
 	)
@@ -58,8 +58,8 @@ func (r *tracedUserRepo) GetByID(ctx context.Context, id string) (entity.User, e
 	return result, err
 }
 
-func (r *tracedUserRepo) GetByEmail(ctx context.Context, email string) (entity.User, error) {
-	ctx, span := otel.Tracer(_tracerNameUser).Start(
+func (r *tracedRepo) GetByEmail(ctx context.Context, email string) (entity.User, error) {
+	ctx, span := otel.Tracer(_tracerName).Start(
 		ctx, "UserRepo.GetByEmail",
 		trace.WithAttributes(attribute.String("user.email", email)),
 	)

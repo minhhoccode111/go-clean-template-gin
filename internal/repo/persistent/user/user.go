@@ -1,4 +1,4 @@
-package persistent
+package user
 
 import (
 	"context"
@@ -9,33 +9,34 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/minhhoccode111/go-clean-template-gin/internal/entity"
 	"github.com/minhhoccode111/go-clean-template-gin/internal/repo"
+	"github.com/minhhoccode111/go-clean-template-gin/internal/repo/persistent"
 	"github.com/minhhoccode111/go-clean-template-gin/internal/repo/persistent/sqlc"
 	"github.com/minhhoccode111/go-clean-template-gin/pkg/postgres"
 )
 
-// UserRepo implements repo.UserRepo using sqlc.
-type UserRepo struct {
+// Repo implements repo.UserRepo using sqlc.
+type Repo struct {
 	*postgres.Postgres
 	queries *sqlc.Queries
 }
 
-// NewUserRepo returns a User repository instrumented with OpenTelemetry tracing spans.
-func NewUserRepo(pg *postgres.Postgres) repo.UserRepo {
-	return newTracedUser(&UserRepo{
+// New returns a User repository instrumented with OpenTelemetry tracing spans.
+func New(pg *postgres.Postgres) repo.UserRepo {
+	return newTraced(&Repo{
 		Postgres: pg,
 		queries:  sqlc.New(pg.Pool),
 	})
 }
 
 // Store -.
-func (r *UserRepo) Store(ctx context.Context, user *entity.User) error {
+func (r *Repo) Store(ctx context.Context, user *entity.User) error {
 	err := r.queries.CreateUser(ctx, sqlc.CreateUserParams{
 		ID:           user.ID,
 		Username:     user.Username,
 		Email:        user.Email,
 		PasswordHash: user.PasswordHash,
-		CreatedAt:    pgTimestamptz(user.CreatedAt),
-		UpdatedAt:    pgTimestamptz(user.UpdatedAt),
+		CreatedAt:    persistent.Timestamptz(user.CreatedAt),
+		UpdatedAt:    persistent.Timestamptz(user.UpdatedAt),
 	})
 	if err != nil {
 		var pgErr *pgconn.PgError
@@ -50,7 +51,7 @@ func (r *UserRepo) Store(ctx context.Context, user *entity.User) error {
 }
 
 // GetByID -.
-func (r *UserRepo) GetByID(ctx context.Context, id string) (entity.User, error) {
+func (r *Repo) GetByID(ctx context.Context, id string) (entity.User, error) {
 	row, err := r.queries.GetUserByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -64,7 +65,7 @@ func (r *UserRepo) GetByID(ctx context.Context, id string) (entity.User, error) 
 }
 
 // GetByEmail -.
-func (r *UserRepo) GetByEmail(ctx context.Context, email string) (entity.User, error) {
+func (r *Repo) GetByEmail(ctx context.Context, email string) (entity.User, error) {
 	row, err := r.queries.GetUserByEmail(ctx, email)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {

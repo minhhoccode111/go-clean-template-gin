@@ -1,4 +1,4 @@
-package persistent
+package task
 
 import (
 	"context"
@@ -11,18 +11,18 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-const _tracerNameTask = "github.com/minhhoccode111/go-clean-template-gin/internal/repo/persistent/task"
+const _tracerName = "github.com/minhhoccode111/go-clean-template-gin/internal/repo/persistent/task"
 
-type tracedTaskRepo struct {
+type tracedRepo struct {
 	next repo.TaskRepo
 }
 
-func newTracedTask(next repo.TaskRepo) repo.TaskRepo {
-	return &tracedTaskRepo{next: next}
+func newTraced(next repo.TaskRepo) repo.TaskRepo {
+	return &tracedRepo{next: next}
 }
 
-func (r *tracedTaskRepo) Store(ctx context.Context, task *entity.Task) error {
-	ctx, span := otel.Tracer(_tracerNameTask).Start(
+func (r *tracedRepo) Store(ctx context.Context, task *entity.Task) error {
+	ctx, span := otel.Tracer(_tracerName).Start(
 		ctx, "TaskRepo.Store",
 		trace.WithAttributes(
 			attribute.String("task.id", task.ID),
@@ -41,8 +41,8 @@ func (r *tracedTaskRepo) Store(ctx context.Context, task *entity.Task) error {
 	return err
 }
 
-func (r *tracedTaskRepo) GetByID(ctx context.Context, userID, taskID string) (entity.Task, error) {
-	ctx, span := otel.Tracer(_tracerNameTask).Start(
+func (r *tracedRepo) GetByID(ctx context.Context, userID, taskID string) (entity.Task, error) {
+	ctx, span := otel.Tracer(_tracerName).Start(
 		ctx, "TaskRepo.GetByID",
 		trace.WithAttributes(
 			attribute.String("user.id", userID),
@@ -61,7 +61,7 @@ func (r *tracedTaskRepo) GetByID(ctx context.Context, userID, taskID string) (en
 	return result, err
 }
 
-func (r *tracedTaskRepo) List(ctx context.Context, userID string, filter repo.TaskFilter) ([]entity.Task, int, error) {
+func (r *tracedRepo) List(ctx context.Context, userID string, filter repo.TaskFilter) ([]entity.Task, int, error) {
 	attrs := []attribute.KeyValue{
 		attribute.String("user.id", userID),
 		attribute.Int64("task.limit", toInt64(filter.Limit)),
@@ -71,7 +71,7 @@ func (r *tracedTaskRepo) List(ctx context.Context, userID string, filter repo.Ta
 		attrs = append(attrs, attribute.String("task.status", string(*filter.Status)))
 	}
 
-	ctx, span := otel.Tracer(_tracerNameTask).Start(
+	ctx, span := otel.Tracer(_tracerName).Start(
 		ctx, "TaskRepo.List",
 		trace.WithAttributes(attrs...),
 	)
@@ -87,8 +87,8 @@ func (r *tracedTaskRepo) List(ctx context.Context, userID string, filter repo.Ta
 	return tasks, total, err
 }
 
-func (r *tracedTaskRepo) Update(ctx context.Context, task *entity.Task) error {
-	ctx, span := otel.Tracer(_tracerNameTask).Start(
+func (r *tracedRepo) Update(ctx context.Context, task *entity.Task) error {
+	ctx, span := otel.Tracer(_tracerName).Start(
 		ctx, "TaskRepo.Update",
 		trace.WithAttributes(
 			attribute.String("task.id", task.ID),
@@ -107,8 +107,8 @@ func (r *tracedTaskRepo) Update(ctx context.Context, task *entity.Task) error {
 	return err
 }
 
-func (r *tracedTaskRepo) Delete(ctx context.Context, userID, taskID string) error {
-	ctx, span := otel.Tracer(_tracerNameTask).Start(
+func (r *tracedRepo) Delete(ctx context.Context, userID, taskID string) error {
+	ctx, span := otel.Tracer(_tracerName).Start(
 		ctx, "TaskRepo.Delete",
 		trace.WithAttributes(
 			attribute.String("user.id", userID),

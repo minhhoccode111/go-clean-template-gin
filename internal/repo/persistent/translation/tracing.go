@@ -1,4 +1,4 @@
-package persistent
+package translation
 
 import (
 	"context"
@@ -11,18 +11,18 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-const _tracerNameTranslation = "github.com/minhhoccode111/go-clean-template-gin/internal/repo/persistent/translation"
+const _tracerName = "github.com/minhhoccode111/go-clean-template-gin/internal/repo/persistent/translation"
 
-type tracedTranslationRepo struct {
+type tracedRepo struct {
 	next repo.TranslationRepo
 }
 
-func newTracedTranslation(next repo.TranslationRepo) repo.TranslationRepo {
-	return &tracedTranslationRepo{next: next}
+func newTraced(next repo.TranslationRepo) repo.TranslationRepo {
+	return &tracedRepo{next: next}
 }
 
-func (r *tracedTranslationRepo) Store(ctx context.Context, userID string, t entity.Translation) error {
-	ctx, span := otel.Tracer(_tracerNameTranslation).Start(
+func (r *tracedRepo) Store(ctx context.Context, userID string, t entity.Translation) error {
+	ctx, span := otel.Tracer(_tracerName).Start(
 		ctx, "TranslationRepo.Store",
 		trace.WithAttributes(
 			attribute.String("user.id", userID),
@@ -42,8 +42,8 @@ func (r *tracedTranslationRepo) Store(ctx context.Context, userID string, t enti
 	return err
 }
 
-func (r *tracedTranslationRepo) GetHistory(ctx context.Context, userID string) ([]entity.Translation, error) {
-	ctx, span := otel.Tracer(_tracerNameTranslation).Start(
+func (r *tracedRepo) GetHistory(ctx context.Context, userID string) ([]entity.Translation, error) {
+	ctx, span := otel.Tracer(_tracerName).Start(
 		ctx, "TranslationRepo.GetHistory",
 		trace.WithAttributes(attribute.String("user.id", userID)),
 	)

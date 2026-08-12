@@ -1,4 +1,4 @@
-package persistent
+package translation
 
 import (
 	"context"
@@ -10,22 +10,31 @@ import (
 	"github.com/minhhoccode111/go-clean-template-gin/pkg/postgres"
 )
 
-// TranslationRepo -.
-type TranslationRepo struct {
+// Repo implements repo.TranslationRepo using sqlc.
+type Repo struct {
 	*postgres.Postgres
 	queries *sqlc.Queries
 }
 
-// NewTranslationRepo returns a Translation repository instrumented with OpenTelemetry tracing spans.
-func NewTranslationRepo(pg *postgres.Postgres) repo.TranslationRepo {
-	return newTracedTranslation(&TranslationRepo{
+// New returns a Translation repository instrumented with OpenTelemetry tracing spans.
+func New(pg *postgres.Postgres) repo.TranslationRepo {
+	return newTraced(&Repo{
 		Postgres: pg,
 		queries:  sqlc.New(pg.Pool),
 	})
 }
 
+// NewTx returns a raw Translation repository bound to the given queries
+// (e.g. transaction-scoped), used by the unit of work.
+func NewTx(pg *postgres.Postgres, q *sqlc.Queries) repo.TranslationRepo {
+	return &Repo{
+		Postgres: pg,
+		queries:  q,
+	}
+}
+
 // GetHistory -.
-func (r *TranslationRepo) GetHistory(ctx context.Context, _ string) ([]entity.Translation, error) {
+func (r *Repo) GetHistory(ctx context.Context, _ string) ([]entity.Translation, error) {
 	rows, err := r.queries.GetHistory(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("TranslationRepo - GetHistory - r.queries.GetHistory: %w", err)
@@ -46,7 +55,7 @@ func (r *TranslationRepo) GetHistory(ctx context.Context, _ string) ([]entity.Tr
 }
 
 // Store -.
-func (r *TranslationRepo) Store(ctx context.Context, _ string, t entity.Translation) error {
+func (r *Repo) Store(ctx context.Context, _ string, t entity.Translation) error {
 	tx, err := r.Pool.Begin(ctx)
 	if err != nil {
 		return fmt.Errorf("TranslationRepo - Store - r.Pool.Begin: %w", err)

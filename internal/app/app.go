@@ -17,6 +17,9 @@ import (
 	"github.com/minhhoccode111/go-clean-template-gin/internal/entity"
 	repocache "github.com/minhhoccode111/go-clean-template-gin/internal/repo/cache"
 	"github.com/minhhoccode111/go-clean-template-gin/internal/repo/persistent"
+	persistTaskRepo "github.com/minhhoccode111/go-clean-template-gin/internal/repo/persistent/task"
+	persistTranslationRepo "github.com/minhhoccode111/go-clean-template-gin/internal/repo/persistent/translation"
+	persistUserRepo "github.com/minhhoccode111/go-clean-template-gin/internal/repo/persistent/user"
 	"github.com/minhhoccode111/go-clean-template-gin/internal/repo/webapi"
 	"github.com/minhhoccode111/go-clean-template-gin/internal/usecase"
 	"github.com/minhhoccode111/go-clean-template-gin/internal/usecase/task"
@@ -55,9 +58,9 @@ func initUseCases(
 	otterCache *cache.Cache[string, []entity.Translation],
 	uow *persistent.PgUnitOfWork,
 ) useCases {
-	translationRepo := persistent.NewTranslationRepo(pg)
-	taskRepo := persistent.NewTaskRepo(pg)
-	userRepo := persistent.NewUserRepo(pg)
+	translationRepo := persistTranslationRepo.New(pg)
+	taskRepo := persistTaskRepo.New(pg)
+	userRepo := persistUserRepo.New(pg)
 
 	return useCases{
 		user:        user.New(userRepo, jwtManager),
