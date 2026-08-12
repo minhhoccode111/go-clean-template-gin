@@ -27,7 +27,9 @@ type test struct {
 	err  error
 }
 
-func translationUseCase(t *testing.T) (usecase.Translation, *MockTranslationRepo, *MockTranslationWebAPI, *MockTranslationCache) {
+func translationUseCase(
+	t *testing.T,
+) (usecase.Translation, *MockTranslationRepo, *MockTranslationWebAPI, *MockTranslationCache) {
 	t.Helper()
 
 	mockCtl := gomock.NewController(t)
@@ -59,10 +61,16 @@ func TestHistory(t *testing.T) {
 		{
 			name: "cache hit",
 			mock: func(_ *MockTranslationRepo, _ *MockTranslationWebAPI, cache *MockTranslationCache) {
-				cached := []entity.Translation{{Original: testOriginalText, Translation: testTranslatedText}}
+				cached := []entity.Translation{
+					{Original: testOriginalText, Translation: testTranslatedText},
+				}
 				cache.EXPECT().GetHistory(gomock.Any()).Return(cached, true)
 			},
-			res: entity.TranslationHistory{History: []entity.Translation{{Original: testOriginalText, Translation: testTranslatedText}}},
+			res: entity.TranslationHistory{
+				History: []entity.Translation{
+					{Original: testOriginalText, Translation: testTranslatedText},
+				},
+			},
 			err: nil,
 		},
 		{
@@ -98,7 +106,9 @@ func TestTranslate(t *testing.T) {
 		{
 			name: "success - cache invalidated",
 			mock: func(repo *MockTranslationRepo, webAPI *MockTranslationWebAPI, cache *MockTranslationCache) {
-				webAPI.EXPECT().Translate(gomock.Any(), entity.Translation{}).Return(entity.Translation{}, nil)
+				webAPI.EXPECT().
+					Translate(gomock.Any(), entity.Translation{}).
+					Return(entity.Translation{}, nil)
 				repo.EXPECT().Store(gomock.Any(), testUserID, entity.Translation{}).Return(nil)
 				cache.EXPECT().InvalidateHistory(gomock.Any())
 			},
@@ -108,7 +118,9 @@ func TestTranslate(t *testing.T) {
 		{
 			name: "web API error",
 			mock: func(_ *MockTranslationRepo, webAPI *MockTranslationWebAPI, _ *MockTranslationCache) {
-				webAPI.EXPECT().Translate(gomock.Any(), entity.Translation{}).Return(entity.Translation{}, errInternalServErr)
+				webAPI.EXPECT().
+					Translate(gomock.Any(), entity.Translation{}).
+					Return(entity.Translation{}, errInternalServErr)
 			},
 			res: entity.Translation{},
 			err: errInternalServErr,
@@ -116,8 +128,12 @@ func TestTranslate(t *testing.T) {
 		{
 			name: "repo error",
 			mock: func(repo *MockTranslationRepo, webAPI *MockTranslationWebAPI, _ *MockTranslationCache) {
-				webAPI.EXPECT().Translate(gomock.Any(), entity.Translation{}).Return(entity.Translation{}, nil)
-				repo.EXPECT().Store(gomock.Any(), testUserID, entity.Translation{}).Return(errInternalServErr)
+				webAPI.EXPECT().
+					Translate(gomock.Any(), entity.Translation{}).
+					Return(entity.Translation{}, nil)
+				repo.EXPECT().
+					Store(gomock.Any(), testUserID, entity.Translation{}).
+					Return(errInternalServErr)
 			},
 			res: entity.Translation{},
 			err: errInternalServErr,

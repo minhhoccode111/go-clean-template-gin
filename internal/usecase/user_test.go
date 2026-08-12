@@ -107,7 +107,9 @@ func TestLogin(t *testing.T) {
 		t.Parallel()
 
 		uc, repo := newUserUseCase(t)
-		repo.EXPECT().GetByEmail(gomock.Any(), "notfound@example.com").Return(entity.User{}, entity.ErrUserNotFound)
+		repo.EXPECT().
+			GetByEmail(gomock.Any(), "notfound@example.com").
+			Return(entity.User{}, entity.ErrUserNotFound)
 
 		token, err := uc.Login(context.Background(), "notfound@example.com", "password123")
 
@@ -141,7 +143,9 @@ func TestGetUser(t *testing.T) {
 		t.Parallel()
 
 		uc, repo := newUserUseCase(t)
-		repo.EXPECT().GetByID(gomock.Any(), "missing-id").Return(entity.User{}, entity.ErrUserNotFound)
+		repo.EXPECT().
+			GetByID(gomock.Any(), "missing-id").
+			Return(entity.User{}, entity.ErrUserNotFound)
 
 		_, err := uc.GetUser(context.Background(), "missing-id")
 
