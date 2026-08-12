@@ -45,7 +45,13 @@ func TestNoDupsStr(t *testing.T) {
 
 			got := err == nil
 			if got != tc.valid {
-				t.Errorf("no_dups_str(%v): want valid=%v, got valid=%v (err: %v)", tc.input, tc.valid, got, err)
+				t.Errorf(
+					"no_dups_str(%v): want valid=%v, got valid=%v (err: %v)",
+					tc.input,
+					tc.valid,
+					got,
+					err,
+				)
 			}
 		})
 	}
@@ -87,7 +93,13 @@ func TestTag(t *testing.T) {
 
 			got := err == nil
 			if got != tc.valid {
-				t.Errorf("tag(%q): want valid=%v, got valid=%v (err: %v)", tc.input, tc.valid, got, err)
+				t.Errorf(
+					"tag(%q): want valid=%v, got valid=%v (err: %v)",
+					tc.input,
+					tc.valid,
+					got,
+					err,
+				)
 			}
 		})
 	}
@@ -127,7 +139,13 @@ func TestUsername(t *testing.T) {
 
 			got := err == nil
 			if got != tc.valid {
-				t.Errorf("username(%q): want valid=%v, got valid=%v (err: %v)", tc.input, tc.valid, got, err)
+				t.Errorf(
+					"username(%q): want valid=%v, got valid=%v (err: %v)",
+					tc.input,
+					tc.valid,
+					got,
+					err,
+				)
 			}
 		})
 	}
@@ -166,7 +184,13 @@ func TestPassword(t *testing.T) {
 
 			got := err == nil
 			if got != tc.valid {
-				t.Errorf("password(%q): want valid=%v, got valid=%v (err: %v)", tc.input, tc.valid, got, err)
+				t.Errorf(
+					"password(%q): want valid=%v, got valid=%v (err: %v)",
+					tc.input,
+					tc.valid,
+					got,
+					err,
+				)
 			}
 		})
 	}
@@ -218,7 +242,12 @@ func extractErrorsCases() []struct {
 		},
 		{
 			"duplicate tags",
-			extractErrorsPayload{Email: testEmail, Username: testUser, Password: testPassOK, Tags: []string{testTagGo, testTagGo}},
+			extractErrorsPayload{
+				Email:    testEmail,
+				Username: testUser,
+				Password: testPassOK,
+				Tags:     []string{testTagGo, testTagGo},
+			},
 			"contains duplicate values",
 		},
 	}
@@ -250,7 +279,11 @@ func TestExtractErrors(t *testing.T) {
 			}
 
 			if !found {
-				t.Errorf("ExtractErrors: want a message containing %q, got %v", tc.wantMessage, msgs)
+				t.Errorf(
+					"ExtractErrors: want a message containing %q, got %v",
+					tc.wantMessage,
+					msgs,
+				)
 			}
 		})
 	}

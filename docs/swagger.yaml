@@ -75,28 +75,6 @@ definitions:
         example: johndoe
         type: string
     type: object
-  request.Translate:
-    properties:
-      destination:
-        example: en
-        type: string
-      original:
-        example: текст для перевода
-        type: string
-      source:
-        example: auto
-        type: string
-    required:
-    - destination
-    - original
-    - source
-    type: object
-  response.Error:
-    properties:
-      error:
-        example: message
-        type: string
-    type: object
   v1.CreateTask:
     properties:
       description:
@@ -109,6 +87,12 @@ definitions:
         type: string
     required:
     - title
+    type: object
+  v1.Error:
+    properties:
+      error:
+        example: message
+        type: string
     type: object
   v1.Login:
     properties:
@@ -170,6 +154,22 @@ definitions:
     required:
     - status
     type: object
+  v1.Translate:
+    properties:
+      destination:
+        example: en
+        type: string
+      original:
+        example: текст для перевода
+        type: string
+      source:
+        example: auto
+        type: string
+    required:
+    - destination
+    - original
+    - source
+    type: object
   v1.UpdateTask:
     properties:
       description:
@@ -214,15 +214,15 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.Error'
+            $ref: '#/definitions/v1.Error'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.Error'
+            $ref: '#/definitions/v1.Error'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.Error'
+            $ref: '#/definitions/v1.Error'
       summary: Login
       tags:
       - auth
@@ -249,15 +249,15 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.Error'
+            $ref: '#/definitions/v1.Error'
         "409":
           description: Conflict
           schema:
-            $ref: '#/definitions/response.Error'
+            $ref: '#/definitions/v1.Error'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.Error'
+            $ref: '#/definitions/v1.Error'
       summary: Register
       tags:
       - auth
@@ -294,11 +294,11 @@ paths:
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.Error'
+            $ref: '#/definitions/v1.Error'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.Error'
+            $ref: '#/definitions/v1.Error'
       security:
       - BearerAuth: []
       summary: List tasks
@@ -326,15 +326,15 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.Error'
+            $ref: '#/definitions/v1.Error'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.Error'
+            $ref: '#/definitions/v1.Error'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.Error'
+            $ref: '#/definitions/v1.Error'
       security:
       - BearerAuth: []
       summary: Create task
@@ -356,15 +356,15 @@ paths:
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.Error'
+            $ref: '#/definitions/v1.Error'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/response.Error'
+            $ref: '#/definitions/v1.Error'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.Error'
+            $ref: '#/definitions/v1.Error'
       security:
       - BearerAuth: []
       summary: Delete task
@@ -389,19 +389,19 @@ paths:
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.Error'
+            $ref: '#/definitions/v1.Error'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/response.Error'
+            $ref: '#/definitions/v1.Error'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/response.Error'
+            $ref: '#/definitions/v1.Error'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.Error'
+            $ref: '#/definitions/v1.Error'
       security:
       - BearerAuth: []
       summary: Get task
@@ -434,23 +434,23 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.Error'
+            $ref: '#/definitions/v1.Error'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.Error'
+            $ref: '#/definitions/v1.Error'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/response.Error'
+            $ref: '#/definitions/v1.Error'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/response.Error'
+            $ref: '#/definitions/v1.Error'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.Error'
+            $ref: '#/definitions/v1.Error'
       security:
       - BearerAuth: []
       summary: Update task
@@ -485,23 +485,23 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.Error'
+            $ref: '#/definitions/v1.Error'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.Error'
+            $ref: '#/definitions/v1.Error'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/response.Error'
+            $ref: '#/definitions/v1.Error'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/response.Error'
+            $ref: '#/definitions/v1.Error'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.Error'
+            $ref: '#/definitions/v1.Error'
       security:
       - BearerAuth: []
       summary: Transition task status
@@ -519,7 +519,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/request.Translate'
+          $ref: '#/definitions/v1.Translate'
       produces:
       - application/json
       responses:
@@ -530,15 +530,15 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.Error'
+            $ref: '#/definitions/v1.Error'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.Error'
+            $ref: '#/definitions/v1.Error'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.Error'
+            $ref: '#/definitions/v1.Error'
       security:
       - BearerAuth: []
       summary: Translate
@@ -558,11 +558,11 @@ paths:
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.Error'
+            $ref: '#/definitions/v1.Error'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.Error'
+            $ref: '#/definitions/v1.Error'
       security:
       - BearerAuth: []
       summary: Show history
@@ -582,15 +582,15 @@ paths:
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.Error'
+            $ref: '#/definitions/v1.Error'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/response.Error'
+            $ref: '#/definitions/v1.Error'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.Error'
+            $ref: '#/definitions/v1.Error'
       security:
       - BearerAuth: []
       summary: Get profile

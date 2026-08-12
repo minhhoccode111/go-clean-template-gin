@@ -24,7 +24,7 @@ import (
 const (
 	// Base settings.
 	host     = "app"
-	attempts = 20
+	attempts = 60
 
 	// Attempts connection.
 	httpURL        = "http://" + host + ":8080"
@@ -348,11 +348,7 @@ func getHealthCheck(url string) (int, error) {
 func healthCheck(attempts int) error {
 	for attempts > 0 {
 		statusCode, err := getHealthCheck(healthPath)
-		if err != nil {
-			return err
-		}
-
-		if statusCode == http.StatusOK {
+		if err == nil && statusCode == http.StatusOK {
 			return nil
 		}
 

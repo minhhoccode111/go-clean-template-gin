@@ -61,20 +61,6 @@ export interface EntityUser {
   username?: string;
 }
 
-export interface RequestTranslate {
-  /** @example "en" */
-  destination: string;
-  /** @example "текст для перевода" */
-  original: string;
-  /** @example "auto" */
-  source: string;
-}
-
-export interface ResponseError {
-  /** @example "message" */
-  error?: string;
-}
-
 export interface V1CreateTask {
   /**
    * @maxLength 1000
@@ -86,6 +72,11 @@ export interface V1CreateTask {
    * @example "My task"
    */
   title: string;
+}
+
+export interface V1Error {
+  /** @example "message" */
+  error?: string;
 }
 
 export interface V1Login {
@@ -125,6 +116,15 @@ export interface V1Token {
 export interface V1TransitionTask {
   /** @example "in_progress" */
   status: "todo" | "in_progress" | "done";
+}
+
+export interface V1Translate {
+  /** @example "en" */
+  destination: string;
+  /** @example "текст для перевода" */
+  original: string;
+  /** @example "auto" */
+  source: string;
 }
 
 export interface V1UpdateTask {
@@ -416,7 +416,7 @@ export class Api<
      * @request POST:/auth/login
      */
     login: (request: V1Login, params: RequestParams = {}) =>
-      this.request<V1Token, ResponseError>({
+      this.request<V1Token, V1Error>({
         path: `/auth/login`,
         method: "POST",
         body: request,
@@ -434,7 +434,7 @@ export class Api<
      * @request POST:/auth/register
      */
     register: (request: V1Register, params: RequestParams = {}) =>
-      this.request<EntityUser, ResponseError>({
+      this.request<EntityUser, V1Error>({
         path: `/auth/register`,
         method: "POST",
         body: request,
@@ -470,7 +470,7 @@ export class Api<
       },
       params: RequestParams = {},
     ) =>
-      this.request<V1TaskList, ResponseError>({
+      this.request<V1TaskList, V1Error>({
         path: `/tasks`,
         method: "GET",
         query: query,
@@ -489,7 +489,7 @@ export class Api<
      * @secure
      */
     createTask: (request: V1CreateTask, params: RequestParams = {}) =>
-      this.request<EntityTask, ResponseError>({
+      this.request<EntityTask, V1Error>({
         path: `/tasks`,
         method: "POST",
         body: request,
@@ -509,7 +509,7 @@ export class Api<
      * @secure
      */
     deleteTask: (id: string, params: RequestParams = {}) =>
-      this.request<void, ResponseError>({
+      this.request<void, V1Error>({
         path: `/tasks/${id}`,
         method: "DELETE",
         secure: true,
@@ -526,7 +526,7 @@ export class Api<
      * @secure
      */
     getTask: (id: string, params: RequestParams = {}) =>
-      this.request<EntityTask, ResponseError>({
+      this.request<EntityTask, V1Error>({
         path: `/tasks/${id}`,
         method: "GET",
         secure: true,
@@ -548,7 +548,7 @@ export class Api<
       request: V1UpdateTask,
       params: RequestParams = {},
     ) =>
-      this.request<EntityTask, ResponseError>({
+      this.request<EntityTask, V1Error>({
         path: `/tasks/${id}`,
         method: "PUT",
         body: request,
@@ -572,7 +572,7 @@ export class Api<
       request: V1TransitionTask,
       params: RequestParams = {},
     ) =>
-      this.request<EntityTask, ResponseError>({
+      this.request<EntityTask, V1Error>({
         path: `/tasks/${id}/status`,
         method: "PATCH",
         body: request,
@@ -592,8 +592,8 @@ export class Api<
      * @request POST:/translation/do-translate
      * @secure
      */
-    doTranslate: (request: RequestTranslate, params: RequestParams = {}) =>
-      this.request<EntityTranslation, ResponseError>({
+    doTranslate: (request: V1Translate, params: RequestParams = {}) =>
+      this.request<EntityTranslation, V1Error>({
         path: `/translation/do-translate`,
         method: "POST",
         body: request,
@@ -613,7 +613,7 @@ export class Api<
      * @secure
      */
     history: (params: RequestParams = {}) =>
-      this.request<EntityTranslationHistory, ResponseError>({
+      this.request<EntityTranslationHistory, V1Error>({
         path: `/translation/history`,
         method: "GET",
         secure: true,
@@ -632,7 +632,7 @@ export class Api<
      * @secure
      */
     profile: (params: RequestParams = {}) =>
-      this.request<EntityUser, ResponseError>({
+      this.request<EntityUser, V1Error>({
         path: `/user/profile`,
         method: "GET",
         secure: true,

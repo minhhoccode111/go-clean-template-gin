@@ -43,7 +43,12 @@ func TestTaskCreate(t *testing.T) {
 		uc, mockRepo := newTaskUseCase(t)
 		mockRepo.EXPECT().Store(gomock.Any(), gomock.Any()).Return(nil)
 
-		t2, err := uc.Create(context.Background(), testTaskUserID, testTaskTitle, "Task description")
+		t2, err := uc.Create(
+			context.Background(),
+			testTaskUserID,
+			testTaskTitle,
+			"Task description",
+		)
 
 		require.NoError(t, err)
 		assert.NotEmpty(t, t2.ID)
@@ -66,7 +71,9 @@ func TestTaskGet(t *testing.T) {
 		t.Parallel()
 
 		uc, mockRepo := newTaskUseCase(t)
-		mockRepo.EXPECT().GetByID(gomock.Any(), testTaskUserID, testTaskID).Return(expectedTask, nil)
+		mockRepo.EXPECT().
+			GetByID(gomock.Any(), testTaskUserID, testTaskID).
+			Return(expectedTask, nil)
 
 		t2, err := uc.Get(context.Background(), testTaskUserID, testTaskID)
 
@@ -78,7 +85,9 @@ func TestTaskGet(t *testing.T) {
 		t.Parallel()
 
 		uc, mockRepo := newTaskUseCase(t)
-		mockRepo.EXPECT().GetByID(gomock.Any(), testTaskUserID, "missing-id").Return(entity.Task{}, entity.ErrTaskNotFound)
+		mockRepo.EXPECT().
+			GetByID(gomock.Any(), testTaskUserID, "missing-id").
+			Return(entity.Task{}, entity.ErrTaskNotFound)
 
 		_, err := uc.Get(context.Background(), testTaskUserID, "missing-id")
 
@@ -89,14 +98,26 @@ func TestTaskGet(t *testing.T) {
 func TestTaskList(t *testing.T) {
 	t.Parallel()
 
-	task1 := entity.Task{ID: "task-1", UserID: testTaskUserID, Title: "Task 1", Status: entity.TaskStatusTodo}
-	task2 := entity.Task{ID: "task-2", UserID: testTaskUserID, Title: "Task 2", Status: entity.TaskStatusInProgress}
+	task1 := entity.Task{
+		ID:     "task-1",
+		UserID: testTaskUserID,
+		Title:  "Task 1",
+		Status: entity.TaskStatusTodo,
+	}
+	task2 := entity.Task{
+		ID:     "task-2",
+		UserID: testTaskUserID,
+		Title:  "Task 2",
+		Status: entity.TaskStatusInProgress,
+	}
 
 	t.Run("list success", func(t *testing.T) {
 		t.Parallel()
 
 		uc, mockRepo := newTaskUseCase(t)
-		mockRepo.EXPECT().List(gomock.Any(), testTaskUserID, gomock.Any()).Return([]entity.Task{task1, task2}, 2, nil)
+		mockRepo.EXPECT().
+			List(gomock.Any(), testTaskUserID, gomock.Any()).
+			Return([]entity.Task{task1, task2}, 2, nil)
 
 		tasks, total, err := uc.List(context.Background(), testTaskUserID, nil, 10, 0)
 
@@ -138,10 +159,18 @@ func TestTaskUpdate(t *testing.T) {
 			Status: entity.TaskStatusTodo,
 		}
 
-		mockRepo.EXPECT().GetByID(gomock.Any(), testTaskUserID, testTaskID).Return(existingTask, nil)
+		mockRepo.EXPECT().
+			GetByID(gomock.Any(), testTaskUserID, testTaskID).
+			Return(existingTask, nil)
 		mockRepo.EXPECT().Update(gomock.Any(), gomock.Any()).Return(nil)
 
-		updated, err := uc.Update(context.Background(), testTaskUserID, testTaskID, "New Title", "New description")
+		updated, err := uc.Update(
+			context.Background(),
+			testTaskUserID,
+			testTaskID,
+			"New Title",
+			"New description",
+		)
 
 		require.NoError(t, err)
 		assert.Equal(t, "New Title", updated.Title)
@@ -166,7 +195,12 @@ func TestTaskTransition(t *testing.T) {
 		mockRepo.EXPECT().GetByID(gomock.Any(), testTaskUserID, testTaskID).Return(todoTask, nil)
 		mockRepo.EXPECT().Update(gomock.Any(), gomock.Any()).Return(nil)
 
-		updated, err := uc.Transition(context.Background(), testTaskUserID, testTaskID, entity.TaskStatusInProgress)
+		updated, err := uc.Transition(
+			context.Background(),
+			testTaskUserID,
+			testTaskID,
+			entity.TaskStatusInProgress,
+		)
 
 		require.NoError(t, err)
 		assert.Equal(t, entity.TaskStatusInProgress, updated.Status)
@@ -186,7 +220,12 @@ func TestTaskTransition(t *testing.T) {
 
 		mockRepo.EXPECT().GetByID(gomock.Any(), testTaskUserID, "task-id-456").Return(doneTask, nil)
 
-		_, err := uc.Transition(context.Background(), testTaskUserID, "task-id-456", entity.TaskStatusTodo)
+		_, err := uc.Transition(
+			context.Background(),
+			testTaskUserID,
+			"task-id-456",
+			entity.TaskStatusTodo,
+		)
 
 		require.ErrorIs(t, err, entity.ErrInvalidTransition)
 	})
@@ -210,7 +249,9 @@ func TestTaskDelete(t *testing.T) {
 		t.Parallel()
 
 		uc, mockRepo := newTaskUseCase(t)
-		mockRepo.EXPECT().Delete(gomock.Any(), testTaskUserID, "missing-id").Return(entity.ErrTaskNotFound)
+		mockRepo.EXPECT().
+			Delete(gomock.Any(), testTaskUserID, "missing-id").
+			Return(entity.ErrTaskNotFound)
 
 		err := uc.Delete(context.Background(), testTaskUserID, "missing-id")
 
@@ -236,7 +277,9 @@ func TestTaskGet_Forbidden(t *testing.T) {
 
 	uc, mockRepo := newTaskUseCase(t)
 
-	mockRepo.EXPECT().GetByID(gomock.Any(), testTaskUserID, "task-id-999").Return(entity.Task{}, entity.ErrTaskForbidden)
+	mockRepo.EXPECT().
+		GetByID(gomock.Any(), testTaskUserID, "task-id-999").
+		Return(entity.Task{}, entity.ErrTaskForbidden)
 
 	_, err := uc.Get(context.Background(), testTaskUserID, "task-id-999")
 
@@ -270,7 +313,9 @@ func TestTaskUpdate_NotFound(t *testing.T) {
 
 	uc, mockRepo := newTaskUseCase(t)
 
-	mockRepo.EXPECT().GetByID(gomock.Any(), testTaskUserID, "missing-id").Return(entity.Task{}, entity.ErrTaskNotFound)
+	mockRepo.EXPECT().
+		GetByID(gomock.Any(), testTaskUserID, "missing-id").
+		Return(entity.Task{}, entity.ErrTaskNotFound)
 
 	_, err := uc.Update(context.Background(), testTaskUserID, "missing-id", "title", "desc")
 
@@ -293,7 +338,12 @@ func TestTaskTransition_UpdateError(t *testing.T) {
 	mockRepo.EXPECT().GetByID(gomock.Any(), testTaskUserID, testTaskID).Return(todoTask, nil)
 	mockRepo.EXPECT().Update(gomock.Any(), gomock.Any()).Return(errRepoGeneric)
 
-	_, err := uc.Transition(context.Background(), testTaskUserID, testTaskID, entity.TaskStatusInProgress)
+	_, err := uc.Transition(
+		context.Background(),
+		testTaskUserID,
+		testTaskID,
+		entity.TaskStatusInProgress,
+	)
 
 	require.Error(t, err)
 	require.ErrorIs(t, err, errRepoGeneric)
@@ -336,7 +386,12 @@ func TestTaskTransition_NotFound(t *testing.T) {
 		GetByID(gomock.Any(), testTaskUserID, testTaskID).
 		Return(entity.Task{}, entity.ErrTaskNotFound)
 
-	_, err := uc.Transition(context.Background(), testTaskUserID, testTaskID, entity.TaskStatusInProgress)
+	_, err := uc.Transition(
+		context.Background(),
+		testTaskUserID,
+		testTaskID,
+		entity.TaskStatusInProgress,
+	)
 
 	require.Error(t, err)
 	require.ErrorIs(t, err, entity.ErrTaskNotFound)
