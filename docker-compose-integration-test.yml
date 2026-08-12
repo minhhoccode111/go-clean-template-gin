@@ -1,6 +1,9 @@
 
 
 services:
+  db:
+    volumes: !reset []
+
   integration-test:
     container_name: integration-test
     platform: linux/amd64
