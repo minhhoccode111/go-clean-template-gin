@@ -19,14 +19,14 @@ import (
 // @Security    BearerAuth
 // @Router      /translation/history [get]
 func (r *V1) history(c *gin.Context) {
-	userID, ok := c.Get("userID")
+	userID, ok := userIDFromContext(c)
 	if !ok {
 		errorResponse(c, http.StatusUnauthorized, "unauthorized")
 
 		return
 	}
 
-	translationHistory, err := r.t.History(c.Request.Context(), userID.(string))
+	translationHistory, err := r.t.History(c.Request.Context(), userID)
 	if err != nil {
 		r.l.Error(err, "restapi - v1 - history")
 		errorResponse(c, http.StatusInternalServerError, "database problems")
@@ -51,7 +51,7 @@ func (r *V1) history(c *gin.Context) {
 // @Security    BearerAuth
 // @Router      /translation/do-translate [post]
 func (r *V1) doTranslate(c *gin.Context) {
-	userID, ok := c.Get("userID")
+	userID, ok := userIDFromContext(c)
 	if !ok {
 		errorResponse(c, http.StatusUnauthorized, "unauthorized")
 
@@ -76,7 +76,7 @@ func (r *V1) doTranslate(c *gin.Context) {
 
 	translation, err := r.t.Translate(
 		c.Request.Context(),
-		userID.(string),
+		userID,
 		entity.Translation{
 			Source:      body.Source,
 			Destination: body.Destination,

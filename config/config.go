@@ -96,7 +96,7 @@ type (
 
 	// JWT -.
 	JWT struct {
-		Secret string        `env:"JWT_SECRET,required"` //nolint:gosec // JWT signing key
+		Secret string        `env:"JWT_SECRET,required"`
 		TTL    time.Duration `env:"JWT_TTL"             envDefault:"24h"`
 	}
 

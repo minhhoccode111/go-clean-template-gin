@@ -155,7 +155,7 @@ func (s *servers) shutdownServers(l logger.Interface) {
 }
 
 // Run creates objects via constructors.
-func Run(cfg *config.Config) { //nolint:funlen,gocyclo,cyclop
+func Run(cfg *config.Config) {
 	l := logger.New(cfg.Log.Level)
 
 	ctx := context.Background()

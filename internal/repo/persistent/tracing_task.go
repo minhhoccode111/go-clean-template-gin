@@ -64,8 +64,8 @@ func (r *tracedTaskRepo) GetByID(ctx context.Context, userID, taskID string) (en
 func (r *tracedTaskRepo) List(ctx context.Context, userID string, filter repo.TaskFilter) ([]entity.Task, int, error) {
 	attrs := []attribute.KeyValue{
 		attribute.String("user.id", userID),
-		attribute.Int64("task.limit", int64(filter.Limit)),
-		attribute.Int64("task.offset", int64(filter.Offset)),
+		attribute.Int64("task.limit", toInt64(filter.Limit)),
+		attribute.Int64("task.offset", toInt64(filter.Offset)),
 	}
 	if filter.Status != nil {
 		attrs = append(attrs, attribute.String("task.status", string(*filter.Status)))

@@ -117,6 +117,7 @@ func (r *V1) listTasks() server.CallHandler {
 		}
 
 		var status *entity.TaskStatus
+
 		if req.Data.Status != "" {
 			s := entity.TaskStatus(req.Data.Status)
 			status = &s
@@ -136,7 +137,7 @@ func (r *V1) listTasks() server.CallHandler {
 func (r *V1) updateTask() server.CallHandler {
 	return func(msg *nats.Msg) (any, error) {
 		var req struct {
-			Token string            `json:"token"`
+			Token string             `json:"token"`
 			Data  natsTaskUpdateData `json:"data"`
 		}
 
@@ -165,7 +166,7 @@ func (r *V1) updateTask() server.CallHandler {
 func (r *V1) transitionTask() server.CallHandler {
 	return func(msg *nats.Msg) (any, error) {
 		var req struct {
-			Token string                `json:"token"`
+			Token string                 `json:"token"`
 			Data  natsTaskTransitionData `json:"data"`
 		}
 
@@ -194,7 +195,7 @@ func (r *V1) transitionTask() server.CallHandler {
 func (r *V1) deleteTask() server.CallHandler {
 	return func(msg *nats.Msg) (any, error) {
 		var req struct {
-			Token string            `json:"token"`
+			Token string             `json:"token"`
 			Data  natsTaskDeleteData `json:"data"`
 		}
 

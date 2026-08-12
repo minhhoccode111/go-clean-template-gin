@@ -47,7 +47,7 @@ func (r *V1) getHistory() server.CallHandler {
 func (r *V1) translate() server.CallHandler {
 	return func(msg *nats.Msg) (any, error) {
 		var req struct {
-			Token string           `json:"token"`
+			Token string            `json:"token"`
 			Data  natsTranslateData `json:"data"`
 		}
 

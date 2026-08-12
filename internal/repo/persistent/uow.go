@@ -26,7 +26,7 @@ func (u *PgUnitOfWork) Do(ctx context.Context, fn func(repo.TxRepos) error) erro
 		return fmt.Errorf("PgUnitOfWork - Do - u.pg.Pool.Begin: %w", err)
 	}
 
-	defer tx.Rollback(ctx) //nolint:errcheck
+	defer tx.Rollback(ctx) //nolint:errcheck // rollback error is expected; commit decides the outcome
 
 	q := sqlc.New(tx)
 

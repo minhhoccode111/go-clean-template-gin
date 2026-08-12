@@ -60,14 +60,7 @@ func (r *UserRepo) GetByID(ctx context.Context, id string) (entity.User, error) 
 		return entity.User{}, fmt.Errorf("UserRepo - GetByID - r.queries.GetUserByID: %w", err)
 	}
 
-	return entity.User{
-		ID:           row.ID,
-		Username:     row.Username,
-		Email:        row.Email,
-		PasswordHash: row.PasswordHash,
-		CreatedAt:    row.CreatedAt.Time,
-		UpdatedAt:    row.UpdatedAt.Time,
-	}, nil
+	return userFromRow(&row), nil
 }
 
 // GetByEmail -.
@@ -81,6 +74,10 @@ func (r *UserRepo) GetByEmail(ctx context.Context, email string) (entity.User, e
 		return entity.User{}, fmt.Errorf("UserRepo - GetByEmail - r.queries.GetUserByEmail: %w", err)
 	}
 
+	return userFromRow(&row), nil
+}
+
+func userFromRow(row *sqlc.User) entity.User {
 	return entity.User{
 		ID:           row.ID,
 		Username:     row.Username,
@@ -88,5 +85,5 @@ func (r *UserRepo) GetByEmail(ctx context.Context, email string) (entity.User, e
 		PasswordHash: row.PasswordHash,
 		CreatedAt:    row.CreatedAt.Time,
 		UpdatedAt:    row.UpdatedAt.Time,
-	}, nil
+	}
 }

@@ -47,7 +47,8 @@ const (
 	natsURL = "nats://guest:guest@nats:4222/" //nolint: gosec,gocritic // no credentials are used
 
 	// Test data
-	expectedOriginal = "текст для перевода"
+	expectedOriginal   = "текст для перевода"
+	doTranslateSuccess = "DoTranslate Success"
 )
 
 var errHealthCheck = fmt.Errorf("url %s is not available", healthPath)
@@ -60,7 +61,7 @@ func doWebRequestWithTimeout(ctx context.Context, method, url string, body io.Re
 
 	req.Header.Set("Content-Type", "application/json")
 
-	return http.DefaultClient.Do(req) //nolint: gosec,gocritic // no credentials are used
+	return http.DefaultClient.Do(req)
 }
 
 func getHealthCheck(url string) (int, error) {
@@ -115,7 +116,7 @@ func TestHTTPDoTranslateV1(t *testing.T) {
 		expected    int
 	}{
 		{
-			description: "DoTranslate Success",
+			description: doTranslateSuccess,
 			body: `{
 				"destination": "en",
 				"original": "текст для перевода",
@@ -124,7 +125,7 @@ func TestHTTPDoTranslateV1(t *testing.T) {
 			expected: http.StatusOK,
 		},
 		{
-			description: "DoTranslate Success",
+			description: doTranslateSuccess,
 			body: `{
 				"destination": "en",
 				"original": "Текст для перевода",

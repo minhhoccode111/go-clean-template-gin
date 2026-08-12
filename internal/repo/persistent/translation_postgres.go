@@ -52,7 +52,7 @@ func (r *TranslationRepo) Store(ctx context.Context, _ string, t entity.Translat
 		return fmt.Errorf("TranslationRepo - Store - r.Pool.Begin: %w", err)
 	}
 
-	defer tx.Rollback(ctx) //nolint:errcheck
+	defer tx.Rollback(ctx) //nolint:errcheck // rollback error is expected; commit decides the outcome
 
 	queriesTx := r.queries.WithTx(tx)
 

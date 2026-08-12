@@ -117,6 +117,7 @@ func (r *V1) listTasks() server.CallHandler {
 		}
 
 		var status *entity.TaskStatus
+
 		if req.Data.Status != "" {
 			s := entity.TaskStatus(req.Data.Status)
 			status = &s

@@ -14,11 +14,15 @@ import (
 
 var errInternalServErr = errors.New("internal server error")
 
-const testUserID = "test-user-123"
+const (
+	testUserID         = "test-user-123"
+	testOriginalText   = "hello"
+	testTranslatedText = "привет"
+)
 
 type test struct {
 	name string
-	mock func()
+	mock func(repo *MockTranslationRepo, webAPI *MockTranslationWebAPI, cache *MockTranslationCache)
 	res  any
 	err  error
 }
@@ -41,12 +45,10 @@ func translationUseCase(t *testing.T) (usecase.Translation, *MockTranslationRepo
 func TestHistory(t *testing.T) {
 	t.Parallel()
 
-	useCase, repo, _, cache := translationUseCase(t)
-
-		tests := []test{
+	tests := []test{
 		{
 			name: "cache miss - empty result from db",
-			mock: func() {
+			mock: func(repo *MockTranslationRepo, _ *MockTranslationWebAPI, cache *MockTranslationCache) {
 				cache.EXPECT().GetHistory(gomock.Any()).Return(nil, false)
 				repo.EXPECT().GetHistory(gomock.Any(), testUserID).Return(nil, nil)
 				cache.EXPECT().SetHistory(gomock.Any(), []entity.Translation(nil)).Return(true)
@@ -56,16 +58,16 @@ func TestHistory(t *testing.T) {
 		},
 		{
 			name: "cache hit",
-			mock: func() {
-				cached := []entity.Translation{{Original: "hello", Translation: "привет"}}
+			mock: func(_ *MockTranslationRepo, _ *MockTranslationWebAPI, cache *MockTranslationCache) {
+				cached := []entity.Translation{{Original: testOriginalText, Translation: testTranslatedText}}
 				cache.EXPECT().GetHistory(gomock.Any()).Return(cached, true)
 			},
-			res: entity.TranslationHistory{History: []entity.Translation{{Original: "hello", Translation: "привет"}}},
+			res: entity.TranslationHistory{History: []entity.Translation{{Original: testOriginalText, Translation: testTranslatedText}}},
 			err: nil,
 		},
 		{
 			name: "cache miss - repo error",
-			mock: func() {
+			mock: func(repo *MockTranslationRepo, _ *MockTranslationWebAPI, cache *MockTranslationCache) {
 				cache.EXPECT().GetHistory(gomock.Any()).Return(nil, false)
 				repo.EXPECT().GetHistory(gomock.Any(), testUserID).Return(nil, errInternalServErr)
 			},
@@ -76,7 +78,10 @@ func TestHistory(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			tc.mock()
+			t.Parallel()
+
+			useCase, repo, webAPI, cache := translationUseCase(t)
+			tc.mock(repo, webAPI, cache)
 
 			res, err := useCase.History(context.Background(), testUserID)
 
@@ -89,12 +94,10 @@ func TestHistory(t *testing.T) {
 func TestTranslate(t *testing.T) {
 	t.Parallel()
 
-	useCase, repo, webAPI, cache := translationUseCase(t)
-
 	tests := []test{
 		{
 			name: "success - cache invalidated",
-			mock: func() {
+			mock: func(repo *MockTranslationRepo, webAPI *MockTranslationWebAPI, cache *MockTranslationCache) {
 				webAPI.EXPECT().Translate(gomock.Any(), entity.Translation{}).Return(entity.Translation{}, nil)
 				repo.EXPECT().Store(gomock.Any(), testUserID, entity.Translation{}).Return(nil)
 				cache.EXPECT().InvalidateHistory(gomock.Any())
@@ -104,7 +107,7 @@ func TestTranslate(t *testing.T) {
 		},
 		{
 			name: "web API error",
-			mock: func() {
+			mock: func(_ *MockTranslationRepo, webAPI *MockTranslationWebAPI, _ *MockTranslationCache) {
 				webAPI.EXPECT().Translate(gomock.Any(), entity.Translation{}).Return(entity.Translation{}, errInternalServErr)
 			},
 			res: entity.Translation{},
@@ -112,7 +115,7 @@ func TestTranslate(t *testing.T) {
 		},
 		{
 			name: "repo error",
-			mock: func() {
+			mock: func(repo *MockTranslationRepo, webAPI *MockTranslationWebAPI, _ *MockTranslationCache) {
 				webAPI.EXPECT().Translate(gomock.Any(), entity.Translation{}).Return(entity.Translation{}, nil)
 				repo.EXPECT().Store(gomock.Any(), testUserID, entity.Translation{}).Return(errInternalServErr)
 			},
@@ -123,7 +126,10 @@ func TestTranslate(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			tc.mock()
+			t.Parallel()
+
+			useCase, repo, webAPI, cache := translationUseCase(t)
+			tc.mock(repo, webAPI, cache)
 
 			res, err := useCase.Translate(context.Background(), testUserID, entity.Translation{})
 

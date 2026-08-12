@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/minhhoccode111/go-clean-template-gin/internal/entity"
@@ -11,6 +12,24 @@ import (
 	"github.com/minhhoccode111/go-clean-template-gin/internal/repo/persistent/sqlc"
 	"github.com/minhhoccode111/go-clean-template-gin/pkg/postgres"
 )
+
+// toInt32 saturates a uint64 to int32 instead of overflowing (gosec G115).
+func toInt32(v uint64) int32 {
+	if v > math.MaxInt32 {
+		return math.MaxInt32
+	}
+
+	return int32(v)
+}
+
+// toInt64 saturates a uint64 to int64 instead of overflowing (gosec G115).
+func toInt64(v uint64) int64 {
+	if v > math.MaxInt64 {
+		return math.MaxInt64
+	}
+
+	return int64(v)
+}
 
 // TaskRepo implements repo.TaskRepo using sqlc.
 type TaskRepo struct {
@@ -88,23 +107,23 @@ func (r *TaskRepo) List(ctx context.Context, userID string, filter repo.TaskFilt
 	rows, err := r.queries.ListTasks(ctx, sqlc.ListTasksParams{
 		UserID:  userID,
 		Column2: statusStr,
-		Limit:   int32(filter.Limit),
-		Offset:  int32(filter.Offset),
+		Limit:   toInt32(filter.Limit),
+		Offset:  toInt32(filter.Offset),
 	})
 	if err != nil {
 		return nil, 0, fmt.Errorf("TaskRepo - List - r.queries.ListTasks: %w", err)
 	}
 
 	tasks := make([]entity.Task, 0, len(rows))
-	for _, row := range rows {
+	for i := range rows {
 		tasks = append(tasks, entity.Task{
-			ID:          row.ID,
-			UserID:      row.UserID,
-			Title:       row.Title,
-			Description: row.Description,
-			Status:      entity.TaskStatus(row.Status),
-			CreatedAt:   row.CreatedAt.Time,
-			UpdatedAt:   row.UpdatedAt.Time,
+			ID:          rows[i].ID,
+			UserID:      rows[i].UserID,
+			Title:       rows[i].Title,
+			Description: rows[i].Description,
+			Status:      entity.TaskStatus(rows[i].Status),
+			CreatedAt:   rows[i].CreatedAt.Time,
+			UpdatedAt:   rows[i].UpdatedAt.Time,
 		})
 	}
 

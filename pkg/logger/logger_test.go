@@ -33,10 +33,10 @@ func TestNewSetsGlobalLevel(t *testing.T) {
 		in   string
 		want zerolog.Level
 	}{
-		{"debug", zerolog.DebugLevel},
-		{"info", zerolog.InfoLevel},
-		{"warn", zerolog.WarnLevel},
-		{"error", zerolog.ErrorLevel},
+		{levelDebug, zerolog.DebugLevel},
+		{levelInfo, zerolog.InfoLevel},
+		{levelWarn, zerolog.WarnLevel},
+		{levelError, zerolog.ErrorLevel},
 		{"unknown", zerolog.InfoLevel}, // default path
 	}
 
