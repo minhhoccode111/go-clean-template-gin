@@ -101,18 +101,18 @@ func TestHTTPLoginV1(t *testing.T) {
 	}{
 		{
 			description: successCase,
-			body:        fmt.Sprintf(`{keyEmail:%q,keyPassword:%q}`, email, password),
+			body:        fmt.Sprintf(`{"email":%q,"password":%q}`, email, password),
 			expected:    http.StatusOK,
 			checkToken:  true,
 		},
 		{
 			description: "wrong password",
-			body:        fmt.Sprintf(`{keyEmail:%q,keyPassword:"wrongpass"}`, email),
+			body:        fmt.Sprintf(`{"email":%q,"password":"wrongpass"}`, email),
 			expected:    http.StatusUnauthorized,
 		},
 		{
 			description: "missing email",
-			body:        fmt.Sprintf(`{keyPassword:%q}`, password),
+			body:        fmt.Sprintf(`{"password":%q}`, password),
 			expected:    http.StatusBadRequest,
 		},
 	}

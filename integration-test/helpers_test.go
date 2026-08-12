@@ -92,7 +92,7 @@ func registerUser(t *testing.T, username, email, password string) *http.Response
 	ctx, cancel := context.WithTimeout(t.Context(), requestTimeout)
 	defer cancel()
 
-	body := fmt.Sprintf(`{keyUsername:%q,keyEmail:%q,keyPassword:%q}`, username, email, password)
+	body := fmt.Sprintf(`{"username":%q,"email":%q,"password":%q}`, username, email, password)
 
 	resp, err := doWebRequestWithTimeout(ctx, http.MethodPost, basePathV1+"/auth/register", bytes.NewBufferString(body))
 	if err != nil {
@@ -109,7 +109,7 @@ func loginUser(t *testing.T, email, password string) string {
 	ctx, cancel := context.WithTimeout(t.Context(), requestTimeout)
 	defer cancel()
 
-	body := fmt.Sprintf(`{keyEmail:%q,keyPassword:%q}`, email, password)
+	body := fmt.Sprintf(`{"email":%q,"password":%q}`, email, password)
 
 	resp, err := doWebRequestWithTimeout(ctx, http.MethodPost, basePathV1+"/auth/login", bytes.NewBufferString(body))
 	if err != nil {
