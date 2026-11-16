@@ -158,6 +158,7 @@ func TestHTTPHistoryUserIsolation(t *testing.T) {
 	translateForHistoryTest(t, tokenB, markerB)
 
 	assertHistoryContains(t, tokenB, markerB, true)
+	assertHistoryContains(t, tokenB, markerA, false)
 	assertHistoryContains(t, tokenA, markerB, false)
 }
 
