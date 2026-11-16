@@ -51,12 +51,13 @@ This template implements three types of servers:
 
 ## Domains
 
-The template includes three domains, each available across all four transports:
+The template includes three domains across REST, gRPC, AMQP RPC, and NATS RPC:
 
 - **User authentication** — register, login, and JWT-protected profile.
 - **Task management** — CRUD with a status state machine (`todo` → `in_progress` → `done`),
   pagination, and per-user scoping.
-- **Translation** — text translation through an external API with per-user history.
+- **Translation** — text translation and per-user history over REST, AMQP RPC, and NATS RPC;
+  gRPC currently exposes history lookup only.
 
 | Operation   | REST                         | gRPC                     |
 |-------------|------------------------------|--------------------------|
@@ -69,8 +70,8 @@ The template includes three domains, each available across all four transports:
 | Update task | `PUT /v1/tasks/:id`          | `TaskService/UpdateTask` |
 | Transition  | `PATCH /v1/tasks/:id/status` | `TaskService/TransitionTask` |
 | Delete task | `DELETE /v1/tasks/:id`       | `TaskService/DeleteTask` |
-| Translate   | `POST /v1/translation/do-translate` | `TranslationHistoryService/DoTranslate` |
-| History     | `GET /v1/translation/history` | `TranslationHistoryService/ShowHistory` |
+| Translate   | `POST /v1/translation/do-translate` | Not exposed |
+| History     | `GET /v1/translation/history` | `Translation/GetHistory` |
 
 ## Content
 
@@ -138,14 +139,17 @@ Check services:
 ## Observability
 
 Distributed tracing uses [OpenTelemetry](https://opentelemetry.io/). Spans are exported over
-OTLP/gRPC to a collector — [Jaeger](https://www.jaegertracing.io/) in the Docker stack. The
-instrumentation covers transports, use cases, repositories, and PostgreSQL queries through
-`otelpgx`.
+OTLP/gRPC to a collector — [Jaeger](https://www.jaegertracing.io/) in the Docker stack.
+Instrumentation currently covers gRPC server calls, use cases, repositories, outbound web API
+calls, and PostgreSQL queries through `otelpgx`.
 
-- REST and gRPC use their native OpenTelemetry instrumentation.
-- AMQP RPC and NATS RPC carry trace context in message headers.
+- gRPC server spans use `otelgrpc`.
 - Use cases and repositories are wrapped in tracing decorators.
-- Internal routes (`/healthz`, `/metrics`, `/swagger`) are not traced.
+- PostgreSQL queries are traced by `otelpgx`.
+- REST, AMQP RPC, and NATS RPC do not currently create transport spans or propagate trace context;
+  spans started in their use cases still export as local roots.
+
+When `TRACING_ENABLED=false`, no tracing SDK is installed and all instrumentation is a no-op.
 
 Configuration (see [.env.example](.env.example)):
 
