@@ -128,3 +128,10 @@ user's established sync pattern (previous: commit `74b78ae` "pull upstream featu
 2. `git diff --stat upstream/master HEAD` — identify new deltas
 3. Classify into A (adopt) / B (keep) / C (reconcile) using this spec's categories
 4. Port approved items as one commit per item, gin-adapted, `make pre-commit` gate
+
+## Latest sync
+
+The next parity pass is tracked in
+[`2026-11-16-upstream-parity-design.md`](2026-11-16-upstream-parity-design.md).
+It ports upstream `d6d2f93` non-breaking changes (Go 1.27, otelpgx, Jaeger, agent docs) and adds
+per-user translation history with a destructive migration.
