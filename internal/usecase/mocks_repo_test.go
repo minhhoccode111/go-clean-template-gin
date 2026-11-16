@@ -173,44 +173,44 @@ func (m *MockTranslationCache) EXPECT() *MockTranslationCacheMockRecorder {
 }
 
 // GetHistory mocks base method.
-func (m *MockTranslationCache) GetHistory(ctx context.Context) ([]entity.Translation, bool) {
+func (m *MockTranslationCache) GetHistory(ctx context.Context, userID string) ([]entity.Translation, bool) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetHistory", ctx)
+	ret := m.ctrl.Call(m, "GetHistory", ctx, userID)
 	ret0, _ := ret[0].([]entity.Translation)
 	ret1, _ := ret[1].(bool)
 	return ret0, ret1
 }
 
 // GetHistory indicates an expected call of GetHistory.
-func (mr *MockTranslationCacheMockRecorder) GetHistory(ctx any) *gomock.Call {
+func (mr *MockTranslationCacheMockRecorder) GetHistory(ctx, userID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetHistory", reflect.TypeOf((*MockTranslationCache)(nil).GetHistory), ctx)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetHistory", reflect.TypeOf((*MockTranslationCache)(nil).GetHistory), ctx, userID)
 }
 
 // InvalidateHistory mocks base method.
-func (m *MockTranslationCache) InvalidateHistory(ctx context.Context) {
+func (m *MockTranslationCache) InvalidateHistory(ctx context.Context, userID string) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "InvalidateHistory", ctx)
+	m.ctrl.Call(m, "InvalidateHistory", ctx, userID)
 }
 
 // InvalidateHistory indicates an expected call of InvalidateHistory.
-func (mr *MockTranslationCacheMockRecorder) InvalidateHistory(ctx any) *gomock.Call {
+func (mr *MockTranslationCacheMockRecorder) InvalidateHistory(ctx, userID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InvalidateHistory", reflect.TypeOf((*MockTranslationCache)(nil).InvalidateHistory), ctx)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InvalidateHistory", reflect.TypeOf((*MockTranslationCache)(nil).InvalidateHistory), ctx, userID)
 }
 
 // SetHistory mocks base method.
-func (m *MockTranslationCache) SetHistory(ctx context.Context, history []entity.Translation) bool {
+func (m *MockTranslationCache) SetHistory(ctx context.Context, userID string, history []entity.Translation) bool {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetHistory", ctx, history)
+	ret := m.ctrl.Call(m, "SetHistory", ctx, userID, history)
 	ret0, _ := ret[0].(bool)
 	return ret0
 }
 
 // SetHistory indicates an expected call of SetHistory.
-func (mr *MockTranslationCacheMockRecorder) SetHistory(ctx, history any) *gomock.Call {
+func (mr *MockTranslationCacheMockRecorder) SetHistory(ctx, userID, history any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetHistory", reflect.TypeOf((*MockTranslationCache)(nil).SetHistory), ctx, history)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetHistory", reflect.TypeOf((*MockTranslationCache)(nil).SetHistory), ctx, userID, history)
 }
 
 // MockUserRepo is a mock of UserRepo interface.

@@ -34,7 +34,7 @@ func New(
 
 // History - getting translate history from store.
 func (uc *UseCase) History(ctx context.Context, userID string) (entity.TranslationHistory, error) {
-	if cached, ok := uc.cache.GetHistory(ctx); ok {
+	if cached, ok := uc.cache.GetHistory(ctx, userID); ok {
 		return entity.TranslationHistory{History: cached}, nil
 	}
 
@@ -46,7 +46,7 @@ func (uc *UseCase) History(ctx context.Context, userID string) (entity.Translati
 		)
 	}
 
-	uc.cache.SetHistory(ctx, translations)
+	uc.cache.SetHistory(ctx, userID, translations)
 
 	return entity.TranslationHistory{History: translations}, nil
 }
@@ -73,7 +73,7 @@ func (uc *UseCase) Translate(
 		)
 	}
 
-	uc.cache.InvalidateHistory(ctx)
+	uc.cache.InvalidateHistory(ctx, userID)
 
 	return translation, nil
 }

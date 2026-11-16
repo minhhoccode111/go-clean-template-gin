@@ -9,7 +9,9 @@ import (
 	"github.com/minhhoccode111/go-clean-template-gin/pkg/cache"
 )
 
-const historyKey = "translation:history"
+func historyKey(userID string) string {
+	return "translation:history:" + userID
+}
 
 // TranslationCache wraps an ottercache.Cache and implements repo.TranslationCache.
 type TranslationCache struct {
@@ -22,17 +24,17 @@ func New(c *cache.Cache[string, []entity.Translation]) *TranslationCache {
 	return &TranslationCache{c: c}
 }
 
-// GetHistory returns the cached translation history.
-func (tc *TranslationCache) GetHistory(_ context.Context) ([]entity.Translation, bool) {
-	return tc.c.Get(historyKey)
+// GetHistory returns the cached translation history for a user.
+func (tc *TranslationCache) GetHistory(_ context.Context, userID string) ([]entity.Translation, bool) {
+	return tc.c.Get(historyKey(userID))
 }
 
-// SetHistory stores the translation history in the cache.
-func (tc *TranslationCache) SetHistory(_ context.Context, history []entity.Translation) bool {
-	return tc.c.Set(historyKey, history)
+// SetHistory stores the translation history for a user in the cache.
+func (tc *TranslationCache) SetHistory(_ context.Context, userID string, history []entity.Translation) bool {
+	return tc.c.Set(historyKey(userID), history)
 }
 
-// InvalidateHistory removes the cached history entry so the next read hits the DB.
-func (tc *TranslationCache) InvalidateHistory(_ context.Context) {
-	tc.c.Delete(historyKey)
+// InvalidateHistory removes the user's cached history entry so the next read hits the DB.
+func (tc *TranslationCache) InvalidateHistory(_ context.Context, userID string) {
+	tc.c.Delete(historyKey(userID))
 }

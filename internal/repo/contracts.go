@@ -33,9 +33,9 @@ type (
 
 	// TranslationCache is an in-process cache for translation data.
 	TranslationCache interface {
-		GetHistory(ctx context.Context) ([]entity.Translation, bool)
-		SetHistory(ctx context.Context, history []entity.Translation) bool
-		InvalidateHistory(ctx context.Context)
+		GetHistory(ctx context.Context, userID string) ([]entity.Translation, bool)
+		SetHistory(ctx context.Context, userID string, history []entity.Translation) bool
+		InvalidateHistory(ctx context.Context, userID string)
 	}
 
 	// UserRepo -.

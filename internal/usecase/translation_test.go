@@ -51,9 +51,9 @@ func TestHistory(t *testing.T) {
 		{
 			name: "cache miss - empty result from db",
 			mock: func(repo *MockTranslationRepo, _ *MockTranslationWebAPI, cache *MockTranslationCache) {
-				cache.EXPECT().GetHistory(gomock.Any()).Return(nil, false)
+				cache.EXPECT().GetHistory(gomock.Any(), testUserID).Return(nil, false)
 				repo.EXPECT().GetHistory(gomock.Any(), testUserID).Return(nil, nil)
-				cache.EXPECT().SetHistory(gomock.Any(), []entity.Translation(nil)).Return(true)
+				cache.EXPECT().SetHistory(gomock.Any(), testUserID, []entity.Translation(nil)).Return(true)
 			},
 			res: entity.TranslationHistory{},
 			err: nil,
@@ -64,7 +64,7 @@ func TestHistory(t *testing.T) {
 				cached := []entity.Translation{
 					{Original: testOriginalText, Translation: testTranslatedText},
 				}
-				cache.EXPECT().GetHistory(gomock.Any()).Return(cached, true)
+				cache.EXPECT().GetHistory(gomock.Any(), testUserID).Return(cached, true)
 			},
 			res: entity.TranslationHistory{
 				History: []entity.Translation{
@@ -76,7 +76,7 @@ func TestHistory(t *testing.T) {
 		{
 			name: "cache miss - repo error",
 			mock: func(repo *MockTranslationRepo, _ *MockTranslationWebAPI, cache *MockTranslationCache) {
-				cache.EXPECT().GetHistory(gomock.Any()).Return(nil, false)
+				cache.EXPECT().GetHistory(gomock.Any(), testUserID).Return(nil, false)
 				repo.EXPECT().GetHistory(gomock.Any(), testUserID).Return(nil, errInternalServErr)
 			},
 			res: entity.TranslationHistory{},
@@ -110,7 +110,7 @@ func TestTranslate(t *testing.T) {
 					Translate(gomock.Any(), entity.Translation{}).
 					Return(entity.Translation{}, nil)
 				repo.EXPECT().Store(gomock.Any(), testUserID, entity.Translation{}).Return(nil)
-				cache.EXPECT().InvalidateHistory(gomock.Any())
+				cache.EXPECT().InvalidateHistory(gomock.Any(), testUserID)
 			},
 			res: entity.Translation{},
 			err: nil,
