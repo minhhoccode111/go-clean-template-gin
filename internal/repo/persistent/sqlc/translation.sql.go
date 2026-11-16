@@ -10,7 +10,7 @@ import (
 )
 
 const getHistory = `-- name: GetHistory :many
-SELECT source, destination, original, translation FROM history
+SELECT source, destination, original, translation FROM history WHERE user_id = $1
 `
 
 type GetHistoryRow struct {
@@ -20,8 +20,8 @@ type GetHistoryRow struct {
 	Translation string
 }
 
-func (q *Queries) GetHistory(ctx context.Context) ([]GetHistoryRow, error) {
-	rows, err := q.db.Query(ctx, getHistory)
+func (q *Queries) GetHistory(ctx context.Context, userID string) ([]GetHistoryRow, error) {
+	rows, err := q.db.Query(ctx, getHistory, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -46,11 +46,12 @@ func (q *Queries) GetHistory(ctx context.Context) ([]GetHistoryRow, error) {
 }
 
 const store = `-- name: Store :exec
-INSERT INTO history (source, destination, original, translation)
-VALUES ($1, $2, $3, $4)
+INSERT INTO history (user_id, source, destination, original, translation)
+VALUES ($1, $2, $3, $4, $5)
 `
 
 type StoreParams struct {
+	UserID      string
 	Source      string
 	Destination string
 	Original    string
@@ -59,6 +60,7 @@ type StoreParams struct {
 
 func (q *Queries) Store(ctx context.Context, arg StoreParams) error {
 	_, err := q.db.Exec(ctx, store,
+		arg.UserID,
 		arg.Source,
 		arg.Destination,
 		arg.Original,

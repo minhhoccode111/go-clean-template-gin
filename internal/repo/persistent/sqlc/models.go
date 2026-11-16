@@ -10,6 +10,7 @@ import (
 
 type History struct {
 	ID          int32
+	UserID      string
 	Source      string
 	Destination string
 	Original    string

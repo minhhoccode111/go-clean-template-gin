@@ -34,8 +34,8 @@ func NewTx(pg *postgres.Postgres, q *sqlc.Queries) repo.TranslationRepo {
 }
 
 // GetHistory -.
-func (r *Repo) GetHistory(ctx context.Context, _ string) ([]entity.Translation, error) {
-	rows, err := r.queries.GetHistory(ctx)
+func (r *Repo) GetHistory(ctx context.Context, userID string) ([]entity.Translation, error) {
+	rows, err := r.queries.GetHistory(ctx, userID)
 	if err != nil {
 		return nil, fmt.Errorf("TranslationRepo - GetHistory - r.queries.GetHistory: %w", err)
 	}
@@ -55,7 +55,7 @@ func (r *Repo) GetHistory(ctx context.Context, _ string) ([]entity.Translation, 
 }
 
 // Store -.
-func (r *Repo) Store(ctx context.Context, _ string, t entity.Translation) error {
+func (r *Repo) Store(ctx context.Context, userID string, t entity.Translation) error {
 	tx, err := r.Pool.Begin(ctx)
 	if err != nil {
 		return fmt.Errorf("TranslationRepo - Store - r.Pool.Begin: %w", err)
@@ -66,6 +66,7 @@ func (r *Repo) Store(ctx context.Context, _ string, t entity.Translation) error 
 	queriesTx := r.queries.WithTx(tx)
 
 	err = queriesTx.Store(ctx, sqlc.StoreParams{
+		UserID:      userID,
 		Source:      t.Source,
 		Destination: t.Destination,
 		Original:    t.Original,
