@@ -3,6 +3,7 @@ package integration_test
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"net/http"
 	"testing"
 
@@ -127,6 +128,106 @@ func TestHTTPHistoryV1(t *testing.T) {
 
 	if len(body.History) == 0 {
 		t.Error("Expected non-empty history")
+	}
+}
+
+// HTTP GET: /v1/translation/history must be scoped to the authenticated user.
+func TestHTTPHistoryUserIsolation(t *testing.T) {
+	tokenA := registerAndLogin(t)
+
+	nameB := sanitizeTestName(t) + "_second"
+	emailB := nameB + "@test.com"
+
+	resp := registerUser(t, nameB, emailB, testPassword)
+	if resp.StatusCode != http.StatusCreated {
+		t.Fatalf("Expected status %d for second user, got %d", http.StatusCreated, resp.StatusCode)
+	}
+
+	resp.Body.Close()
+
+	tokenB := loginUser(t, emailB, testPassword)
+
+	markerA := "isolation-marker-a-" + sanitizeTestName(t)
+	markerB := "isolation-marker-b-" + sanitizeTestName(t)
+
+	translateForHistoryTest(t, tokenA, markerA)
+
+	assertHistoryContains(t, tokenA, markerA, true)
+	assertHistoryContains(t, tokenB, markerA, false)
+
+	translateForHistoryTest(t, tokenB, markerB)
+
+	assertHistoryContains(t, tokenB, markerB, true)
+	assertHistoryContains(t, tokenA, markerB, false)
+}
+
+func translateForHistoryTest(t *testing.T, token, original string) {
+	t.Helper()
+
+	ctx, cancel := context.WithTimeout(t.Context(), requestTimeout)
+	defer cancel()
+
+	body := fmt.Sprintf(`{"destination":"en","original":%q,"source":"auto"}`, original)
+
+	resp, err := doAuthenticatedRequest(
+		ctx,
+		http.MethodPost,
+		basePathV1+"/translation/do-translate",
+		bytes.NewBufferString(body),
+		token,
+	)
+	if err != nil {
+		t.Fatalf("translateForHistoryTest: request failed: %v", err)
+	}
+
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("translateForHistoryTest: expected status %d, got %d", http.StatusOK, resp.StatusCode)
+	}
+}
+
+func assertHistoryContains(t *testing.T, token, original string, expected bool) {
+	t.Helper()
+
+	ctx, cancel := context.WithTimeout(t.Context(), requestTimeout)
+	defer cancel()
+
+	resp, err := doAuthenticatedRequest(
+		ctx,
+		http.MethodGet,
+		basePathV1+"/translation/history",
+		http.NoBody,
+		token,
+	)
+	if err != nil {
+		t.Fatalf("assertHistoryContains: request failed: %v", err)
+	}
+
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("assertHistoryContains: expected status %d, got %d", http.StatusOK, resp.StatusCode)
+	}
+
+	body := parseJSON[struct {
+		History []struct {
+			Original string `json:"original"`
+		} `json:"history"`
+	}](t, resp)
+
+	found := false
+
+	for _, item := range body.History {
+		if item.Original == original {
+			found = true
+
+			break
+		}
+	}
+
+	if found != expected {
+		t.Fatalf("assertHistoryContains: expected found=%t for %q, got %t", expected, original, found)
 	}
 }
 
