@@ -7,6 +7,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/exaring/otelpgx"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -46,6 +47,7 @@ func New(url string, opts ...Option) (*Postgres, error) {
 	poolConfig.MaxConns = int32( //nolint:gosec // skip integer overflow conversion int -> int32
 		pg.maxPoolSize,
 	)
+	poolConfig.ConnConfig.Tracer = otelpgx.NewTracer()
 
 	for pg.connAttempts > 0 {
 		pg.Pool, err = pgxpool.NewWithConfig(context.Background(), poolConfig)

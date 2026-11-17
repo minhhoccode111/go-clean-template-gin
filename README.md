@@ -52,6 +52,7 @@ This template implements three types of servers:
 ## Content
 
 - [Quick start](#quick-start)
+- [Observability](#observability)
 - [Project structure](#project-structure)
 - [Dependency Injection](#dependency-injection)
 - [Clean Architecture](#clean-architecture)
@@ -107,6 +108,31 @@ Check services:
 - NATS monitoring:
   - http://nats.lvh.me | http://127.0.0.1:8222/
   - Credentials: `guest` / `guest`
+- Jaeger:
+  - http://jaeger.lvh.me | http://127.0.0.1:16686
+
+## Observability
+
+Distributed tracing uses [OpenTelemetry](https://opentelemetry.io/). Spans are exported over
+OTLP/gRPC to a collector — [Jaeger](https://www.jaegertracing.io/) in the Docker stack. The
+instrumentation covers transports, use cases, repositories, and PostgreSQL queries through
+`otelpgx`.
+
+- REST and gRPC use their native OpenTelemetry instrumentation.
+- AMQP RPC and NATS RPC carry trace context in message headers.
+- Use cases and repositories are wrapped in tracing decorators.
+- Internal routes (`/healthz`, `/metrics`, `/swagger`) are not traced.
+
+Configuration (see [.env.example](.env.example)):
+
+| Variable                | Default            | Description                       |
+|-------------------------|--------------------|-----------------------------------|
+| `TRACING_ENABLED`       | `false`            | Enable OpenTelemetry tracing      |
+| `TRACING_OTLP_ENDPOINT` | `localhost:4317`   | OTLP/gRPC collector endpoint      |
+| `TRACING_OTLP_INSECURE` | `true`             | Disable TLS for the OTLP exporter |
+| `TRACING_SAMPLE_RATE`   | `0.1`              | Parent-based sampling ratio       |
+
+The Docker stack enables tracing and points the app at `jaeger:4317`.
 
 ## Project structure
 
