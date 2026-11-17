@@ -49,8 +49,32 @@ This template implements three types of servers:
 - gRPC ([gRPC](https://grpc.io/) framework based on protobuf)
 - REST API ([Gin](https://github.com/gin-gonic/gin) framework)
 
+## Domains
+
+The template includes three domains, each available across all four transports:
+
+- **User authentication** — register, login, and JWT-protected profile.
+- **Task management** — CRUD with a status state machine (`todo` → `in_progress` → `done`),
+  pagination, and per-user scoping.
+- **Translation** — text translation through an external API with per-user history.
+
+| Operation   | REST                         | gRPC                     |
+|-------------|------------------------------|--------------------------|
+| Register    | `POST /v1/auth/register`     | `AuthService/Register`   |
+| Login       | `POST /v1/auth/login`        | `AuthService/Login`      |
+| Get profile | `GET /v1/user/profile`       | `AuthService/GetProfile` |
+| Create task | `POST /v1/tasks`             | `TaskService/CreateTask` |
+| List tasks  | `GET /v1/tasks`              | `TaskService/ListTasks`  |
+| Get task    | `GET /v1/tasks/:id`          | `TaskService/GetTask`    |
+| Update task | `PUT /v1/tasks/:id`          | `TaskService/UpdateTask` |
+| Transition  | `PATCH /v1/tasks/:id/status` | `TaskService/TransitionTask` |
+| Delete task | `DELETE /v1/tasks/:id`       | `TaskService/DeleteTask` |
+| Translate   | `POST /v1/translation/do-translate` | `TranslationHistoryService/DoTranslate` |
+| History     | `GET /v1/translation/history` | `TranslationHistoryService/ShowHistory` |
+
 ## Content
 
+- [Domains](#domains)
 - [Quick start](#quick-start)
 - [Observability](#observability)
 - [Project structure](#project-structure)
