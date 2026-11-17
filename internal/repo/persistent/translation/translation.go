@@ -54,18 +54,11 @@ func (r *Repo) GetHistory(ctx context.Context, userID string) ([]entity.Translat
 	return entities, nil
 }
 
-// Store -.
+// Store persists one translation through the repository's queries. The
+// statement is atomic on its own, and a repository created by NewTx already
+// carries the unit-of-work transaction, so no nested transaction is opened.
 func (r *Repo) Store(ctx context.Context, userID string, t entity.Translation) error {
-	tx, err := r.Pool.Begin(ctx)
-	if err != nil {
-		return fmt.Errorf("TranslationRepo - Store - r.Pool.Begin: %w", err)
-	}
-
-	defer tx.Rollback(ctx) //nolint:errcheck // rollback error is expected; commit decides the outcome
-
-	queriesTx := r.queries.WithTx(tx)
-
-	err = queriesTx.Store(ctx, sqlc.StoreParams{
+	err := r.queries.Store(ctx, sqlc.StoreParams{
 		UserID:      userID,
 		Source:      t.Source,
 		Destination: t.Destination,
@@ -73,11 +66,7 @@ func (r *Repo) Store(ctx context.Context, userID string, t entity.Translation) e
 		Translation: t.Translation,
 	})
 	if err != nil {
-		return fmt.Errorf("TranslationRepo - Store - qtx.Store: %w", err)
-	}
-
-	if err := tx.Commit(ctx); err != nil {
-		return fmt.Errorf("TranslationRepo - Store - tx.Commit: %w", err)
+		return fmt.Errorf("TranslationRepo - Store - r.queries.Store: %w", err)
 	}
 
 	return nil
