@@ -15,6 +15,7 @@ import (
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	ginprometheus "github.com/zsais/go-gin-prometheus"
+	otelgin "go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 )
 
 // NewRouter -.
@@ -63,6 +64,10 @@ func NewRouter(
 	// Routers
 	apiV1Group := handler.Group("/v1")
 	{
+		if cfg.Tracing.Enabled {
+			apiV1Group.Use(otelgin.Middleware(cfg.App.Name))
+		}
+
 		v1.NewRoutes(apiV1Group, cfg, t, u, tk, jwtManager, l, v)
 	}
 }

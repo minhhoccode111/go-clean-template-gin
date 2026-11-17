@@ -140,14 +140,16 @@ Check services:
 
 Distributed tracing uses [OpenTelemetry](https://opentelemetry.io/). Spans are exported over
 OTLP/gRPC to a collector — [Jaeger](https://www.jaegertracing.io/) in the Docker stack.
-Instrumentation currently covers gRPC server calls, use cases, repositories, outbound web API
-calls, and PostgreSQL queries through `otelpgx`.
+Instrumentation covers REST, gRPC, AMQP RPC, and NATS RPC transport calls, use cases,
+repositories, outbound web API calls, and PostgreSQL queries through `otelpgx`.
 
+- REST spans use `otelgin` and cover the `/v1` routes when tracing is enabled.
 - gRPC server spans use `otelgrpc`.
+- AMQP RPC and NATS RPC create client and server spans, and carry W3C trace context in message
+  headers so the caller and handler join one trace.
 - Use cases and repositories are wrapped in tracing decorators.
 - PostgreSQL queries are traced by `otelpgx`.
-- REST, AMQP RPC, and NATS RPC do not currently create transport spans or propagate trace context;
-  spans started in their use cases still export as local roots.
+- Internal routes (`/healthz`, `/metrics`, `/swagger`) are not traced.
 
 When `TRACING_ENABLED=false`, no tracing SDK is installed and all instrumentation is a no-op.
 

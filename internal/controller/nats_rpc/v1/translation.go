@@ -12,7 +12,7 @@ import (
 )
 
 func (r *V1) getHistory() server.CallHandler {
-	return func(msg *nats.Msg) (any, error) {
+	return func(ctx context.Context, msg *nats.Msg) (any, error) {
 		userID, _, err := extractUserID(msg, r.j)
 		if err != nil {
 			r.l.Error(err, "nats_rpc - V1 - getHistory")
@@ -20,7 +20,7 @@ func (r *V1) getHistory() server.CallHandler {
 			return nil, fmt.Errorf("nats_rpc - V1 - getHistory - extractUserID: %w", err)
 		}
 
-		translationHistory, err := r.t.History(context.Background(), userID)
+		translationHistory, err := r.t.History(ctx, userID)
 		if err != nil {
 			r.l.Error(err, "nats_rpc - V1 - getHistory")
 
@@ -32,7 +32,7 @@ func (r *V1) getHistory() server.CallHandler {
 }
 
 func (r *V1) translate() server.CallHandler {
-	return func(msg *nats.Msg) (any, error) {
+	return func(ctx context.Context, msg *nats.Msg) (any, error) {
 		userID, rawData, err := extractUserID(msg, r.j)
 		if err != nil {
 			r.l.Error(err, "nats_rpc - V1 - translate")
@@ -48,7 +48,7 @@ func (r *V1) translate() server.CallHandler {
 			return nil, fmt.Errorf("nats_rpc - V1 - translate - json.Unmarshal: %w", err)
 		}
 
-		translation, err := r.t.Translate(context.Background(), userID, entity.Translation{
+		translation, err := r.t.Translate(ctx, userID, entity.Translation{
 			Source:      reqData.Source,
 			Destination: reqData.Destination,
 			Original:    reqData.Original,

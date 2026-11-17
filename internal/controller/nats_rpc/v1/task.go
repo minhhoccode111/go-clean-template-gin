@@ -13,7 +13,7 @@ import (
 )
 
 func (r *V1) createTask() server.CallHandler {
-	return func(msg *nats.Msg) (any, error) {
+	return func(ctx context.Context, msg *nats.Msg) (any, error) {
 		userID, rawData, err := extractUserID(msg, r.j)
 		if err != nil {
 			r.l.Error(err, "nats_rpc - V1 - createTask")
@@ -29,7 +29,7 @@ func (r *V1) createTask() server.CallHandler {
 			return nil, fmt.Errorf("nats_rpc - V1 - createTask - json.Unmarshal: %w", err)
 		}
 
-		task, err := r.tk.Create(context.Background(), userID, reqData.Title, reqData.Description)
+		task, err := r.tk.Create(ctx, userID, reqData.Title, reqData.Description)
 		if err != nil {
 			r.l.Error(err, "nats_rpc - V1 - createTask")
 
@@ -41,7 +41,7 @@ func (r *V1) createTask() server.CallHandler {
 }
 
 func (r *V1) getTask() server.CallHandler {
-	return func(msg *nats.Msg) (any, error) {
+	return func(ctx context.Context, msg *nats.Msg) (any, error) {
 		userID, rawData, err := extractUserID(msg, r.j)
 		if err != nil {
 			r.l.Error(err, "nats_rpc - V1 - getTask")
@@ -57,7 +57,7 @@ func (r *V1) getTask() server.CallHandler {
 			return nil, fmt.Errorf("nats_rpc - V1 - getTask - json.Unmarshal: %w", err)
 		}
 
-		task, err := r.tk.Get(context.Background(), userID, reqData.ID)
+		task, err := r.tk.Get(ctx, userID, reqData.ID)
 		if err != nil {
 			r.l.Error(err, "nats_rpc - V1 - getTask")
 
@@ -69,7 +69,7 @@ func (r *V1) getTask() server.CallHandler {
 }
 
 func (r *V1) listTasks() server.CallHandler {
-	return func(msg *nats.Msg) (any, error) {
+	return func(ctx context.Context, msg *nats.Msg) (any, error) {
 		userID, rawData, err := extractUserID(msg, r.j)
 		if err != nil {
 			r.l.Error(err, "nats_rpc - V1 - listTasks")
@@ -92,7 +92,7 @@ func (r *V1) listTasks() server.CallHandler {
 			status = &s
 		}
 
-		tasks, total, err := r.tk.List(context.Background(), userID, status, reqData.Limit, reqData.Offset)
+		tasks, total, err := r.tk.List(ctx, userID, status, reqData.Limit, reqData.Offset)
 		if err != nil {
 			r.l.Error(err, "nats_rpc - V1 - listTasks")
 
@@ -104,7 +104,7 @@ func (r *V1) listTasks() server.CallHandler {
 }
 
 func (r *V1) updateTask() server.CallHandler {
-	return func(msg *nats.Msg) (any, error) {
+	return func(ctx context.Context, msg *nats.Msg) (any, error) {
 		userID, rawData, err := extractUserID(msg, r.j)
 		if err != nil {
 			r.l.Error(err, "nats_rpc - V1 - updateTask")
@@ -120,7 +120,7 @@ func (r *V1) updateTask() server.CallHandler {
 			return nil, fmt.Errorf("nats_rpc - V1 - updateTask - json.Unmarshal: %w", err)
 		}
 
-		task, err := r.tk.Update(context.Background(), userID, reqData.ID, reqData.Title, reqData.Description)
+		task, err := r.tk.Update(ctx, userID, reqData.ID, reqData.Title, reqData.Description)
 		if err != nil {
 			r.l.Error(err, "nats_rpc - V1 - updateTask")
 
@@ -132,7 +132,7 @@ func (r *V1) updateTask() server.CallHandler {
 }
 
 func (r *V1) transitionTask() server.CallHandler {
-	return func(msg *nats.Msg) (any, error) {
+	return func(ctx context.Context, msg *nats.Msg) (any, error) {
 		userID, rawData, err := extractUserID(msg, r.j)
 		if err != nil {
 			r.l.Error(err, "nats_rpc - V1 - transitionTask")
@@ -148,7 +148,7 @@ func (r *V1) transitionTask() server.CallHandler {
 			return nil, fmt.Errorf("nats_rpc - V1 - transitionTask - json.Unmarshal: %w", err)
 		}
 
-		task, err := r.tk.Transition(context.Background(), userID, reqData.ID, entity.TaskStatus(reqData.Status))
+		task, err := r.tk.Transition(ctx, userID, reqData.ID, entity.TaskStatus(reqData.Status))
 		if err != nil {
 			r.l.Error(err, "nats_rpc - V1 - transitionTask")
 
@@ -160,7 +160,7 @@ func (r *V1) transitionTask() server.CallHandler {
 }
 
 func (r *V1) deleteTask() server.CallHandler {
-	return func(msg *nats.Msg) (any, error) {
+	return func(ctx context.Context, msg *nats.Msg) (any, error) {
 		userID, rawData, err := extractUserID(msg, r.j)
 		if err != nil {
 			r.l.Error(err, "nats_rpc - V1 - deleteTask")
@@ -176,7 +176,7 @@ func (r *V1) deleteTask() server.CallHandler {
 			return nil, fmt.Errorf("nats_rpc - V1 - deleteTask - json.Unmarshal: %w", err)
 		}
 
-		err = r.tk.Delete(context.Background(), userID, reqData.ID)
+		err = r.tk.Delete(ctx, userID, reqData.ID)
 		if err != nil {
 			r.l.Error(err, "nats_rpc - V1 - deleteTask")
 

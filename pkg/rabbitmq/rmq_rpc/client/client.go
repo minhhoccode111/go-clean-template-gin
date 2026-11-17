@@ -11,6 +11,10 @@ import (
 	"github.com/google/uuid"
 	rmqrpc "github.com/minhhoccode111/go-clean-template-gin/pkg/rabbitmq/rmq_rpc"
 	amqp "github.com/rabbitmq/amqp091-go"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -22,6 +26,8 @@ const (
 	_defaultAttempts = 10
 	_defaultTimeout  = 2 * time.Second
 )
+
+const _tracerName = "rmq-rpc.client"
 
 // Message -.
 type Message struct {
@@ -116,6 +122,23 @@ func (c *Client) Shutdown() error {
 
 // RemoteCall -.
 func (c *Client) RemoteCall(handler string, request, response any) error {
+	ctx, span := otel.Tracer(_tracerName).Start(
+		c.ctx, "rmq_rpc.publish "+handler,
+		trace.WithSpanKind(trace.SpanKindClient),
+		trace.WithAttributes(attribute.String("rpc.method", handler)),
+	)
+	defer span.End()
+
+	err := c.remoteCall(ctx, handler, request, response)
+	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+	}
+
+	return err
+}
+
+func (c *Client) remoteCall(ctx context.Context, handler string, request, response any) error {
 	err := c.preRemoteCallWait()
 	if err != nil {
 		return fmt.Errorf("rmq_rpc client - Client - RemoteCall - c.preWait: %w", err)
@@ -123,7 +146,7 @@ func (c *Client) RemoteCall(handler string, request, response any) error {
 
 	corrID := uuid.New().String()
 
-	err = c.publish(corrID, handler, request)
+	err = c.publish(ctx, corrID, handler, request)
 	if err != nil {
 		return fmt.Errorf("rmq_rpc client - Client - RemoteCall - c.publish: %w", err)
 	}
@@ -269,7 +292,7 @@ func (c *Client) ack(d *amqp.Delivery, multiple bool) {
 	d.Ack(multiple) //nolint:errcheck // we can't do anything with this error
 }
 
-func (c *Client) publish(corrID, handler string, request any) error {
+func (c *Client) publish(ctx context.Context, corrID, handler string, request any) error {
 	var (
 		requestBody []byte
 		err         error
@@ -282,6 +305,9 @@ func (c *Client) publish(corrID, handler string, request any) error {
 		}
 	}
 
+	headers := amqp.Table{}
+	otel.GetTextMapPropagator().Inject(ctx, rmqrpc.TableCarrier(headers))
+
 	err = c.conn.Channel.Publish(
 		c.serverExchange,
 		"",
@@ -293,6 +319,7 @@ func (c *Client) publish(corrID, handler string, request any) error {
 			ReplyTo:       c.conn.ConsumerExchange,
 			Type:          handler,
 			Body:          requestBody,
+			Headers:       headers,
 		},
 	)
 	if err != nil {
