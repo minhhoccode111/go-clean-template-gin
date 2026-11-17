@@ -189,6 +189,8 @@ func (s *Server) handleMessage(msg *nats.Msg) {
 
 	body, err := json.Marshal(response)
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		s.logger.Error(err, "nats_rpc server - Server - handleMessage - json.Marshal")
 
 		s.publish(msg, nil, natsrpc.ErrInternalServer.Error())

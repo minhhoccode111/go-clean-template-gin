@@ -189,7 +189,12 @@ func (s *Server) serveCall(d *amqp.Delivery) {
 
 	body, err := json.Marshal(response)
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		s.logger.Error(err, "rmq_rpc server - Server - serveCall - json.Marshal")
+		s.publish(d, nil, rmqrpc.ErrInternalServer.Error())
+
+		return
 	}
 
 	s.publish(d, body, rmqrpc.Success)
