@@ -1,3 +1,5 @@
+-- DESTRUCTIVE ROLLBACK: drops all per-user translation history and recreates
+-- the legacy table without user_id. Data cannot be recovered.
 DROP TABLE IF EXISTS history;
 
 CREATE TABLE IF NOT EXISTS history(

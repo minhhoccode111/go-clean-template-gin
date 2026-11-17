@@ -1,3 +1,5 @@
+-- DESTRUCTIVE MIGRATION: drops the history table and permanently discards all
+-- existing translation history. There is no backfill for user_id.
 DROP TABLE IF EXISTS history;
 
 CREATE TABLE IF NOT EXISTS history (
