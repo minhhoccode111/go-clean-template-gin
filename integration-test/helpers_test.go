@@ -370,6 +370,11 @@ func TestMain(m *testing.M) {
 
 	log.Printf("Integration tests: httpURL %s is available", httpURL)
 
+	translationStub := startTranslationStub()
+
 	code := m.Run()
+
+	translationStub.Close()
+
 	os.Exit(code)
 }
