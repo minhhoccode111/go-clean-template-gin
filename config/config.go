@@ -10,20 +10,21 @@ import (
 type (
 	// Config -.
 	Config struct {
-		App       App
-		HTTP      HTTP
-		Log       Log
-		PG        PG
-		GRPC      GRPC
-		RMQ       RMQ
-		NATS      NATS
-		Metrics   Metrics
-		Swagger   Swagger
-		CORS      CORS
-		Cache     Cache
-		JWT       JWT
-		RateLimit RateLimit
-		Tracing   Tracing
+		App         App
+		HTTP        HTTP
+		Log         Log
+		PG          PG
+		GRPC        GRPC
+		RMQ         RMQ
+		NATS        NATS
+		Metrics     Metrics
+		Swagger     Swagger
+		CORS        CORS
+		Cache       Cache
+		JWT         JWT
+		RateLimit   RateLimit
+		Tracing     Tracing
+		Translation Translation
 	}
 
 	// App -.
@@ -114,6 +115,11 @@ type (
 		OTLPEndpoint string  `env:"TRACING_OTLP_ENDPOINT" envDefault:"localhost:4317"`
 		OTLPInsecure bool    `env:"TRACING_OTLP_INSECURE" envDefault:"true"`
 		SampleRate   float64 `env:"TRACING_SAMPLE_RATE"   envDefault:"0.1"`
+	}
+
+	// Translation -.
+	Translation struct {
+		ServiceURL string `env:"TRANSLATION_SERVICE_URL" envDefault:"translate.google.com"`
 	}
 )
 
