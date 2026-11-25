@@ -57,6 +57,7 @@ func initUseCases(
 	jwtManager *jwt.Manager,
 	otterCache *cache.Cache[string, []entity.Translation],
 	uow *persistent.PgUnitOfWork,
+	translationServiceURL string,
 ) useCases {
 	translationRepo := persistTranslationRepo.New(pg)
 	taskRepo := persistTaskRepo.New(pg)
@@ -65,7 +66,7 @@ func initUseCases(
 	return useCases{
 		user:        user.New(userRepo, jwtManager),
 		task:        task.New(taskRepo),
-		translation: translation.New(translationRepo, webapi.New(), repocache.New(otterCache), uow),
+		translation: translation.New(translationRepo, webapi.New(translationServiceURL), repocache.New(otterCache), uow),
 	}
 }
 
@@ -204,7 +205,7 @@ func Run(cfg *config.Config) {
 	// JWT
 	jwtManager := jwt.New(cfg.JWT.Secret, cfg.JWT.TTL)
 
-	uc := initUseCases(pg, jwtManager, otterCache, uow)
+	uc := initUseCases(pg, jwtManager, otterCache, uow, cfg.Translation.ServiceURL)
 	s := initServers(cfg, uc, jwtManager, l)
 	s.startServers()
 	s.waitForShutdown(l)

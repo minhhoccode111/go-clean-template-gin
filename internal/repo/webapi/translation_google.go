@@ -15,10 +15,14 @@ type TranslationWebAPI struct {
 }
 
 // New returns a TranslationWebAPI instrumented with OpenTelemetry tracing spans.
-func New() repo.TranslationWebAPI {
+func New(serviceURL string) repo.TranslationWebAPI {
+	if serviceURL == "" {
+		serviceURL = "translate.google.com"
+	}
+
 	conf := translator.Config{
 		UserAgent:   []string{"Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:15.0) Gecko/20100101 Firefox/15.0.1"},
-		ServiceUrls: []string{"translate.google.com"},
+		ServiceUrls: []string{serviceURL},
 	}
 
 	return newTraced(&TranslationWebAPI{
