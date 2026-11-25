@@ -103,6 +103,9 @@ air
 make compose-up-integration-test
 ```
 
+The suite starts a local TLS translation stub and points the app at it through
+`TRANSLATION_SERVICE_URL`, so tests do not depend on the public Google Translate endpoint.
+
 ### Full docker stack with reverse proxy
 
 ```sh
